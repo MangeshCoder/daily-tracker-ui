@@ -8,7 +8,6 @@ import { SkeletonDashboard } from '../Skeleton';
 export const Layout = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
-  // const { theme, setTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
 const [profileOpen, setProfileOpen] = useState(false);
 const profileRef = useRef<HTMLDivElement>(null);
