@@ -19,12 +19,32 @@ export const LeaveManagementPage = () => {
   const { data: myLeaves = [] } = useQuery({ queryKey: ['myLeaves'], queryFn: () => leaveApi.getMine().then(r => r.data), enabled: tab === 'mine' });
   const { data: allLeaves = [] } = useQuery({ queryKey: ['allLeaves'], queryFn: () => leaveApi.getAll().then(r => r.data), enabled: tab === 'all' && isManager });
   const { data: holidays = [] } = useQuery({ queryKey: ['holidays'], queryFn: () => holidayApi.getByYear().then(r => r.data), enabled: tab === 'holidays' });
+  
+  const { data: balances = [], isLoading: balanceLoading } = useQuery({
+    queryKey: ['leaveBalance'],
+    queryFn: () => leaveApi.getBalance().then(r => r.data),
+  });
 
   const [holidayForm, setHolidayForm] = useState({name: '',date: '',type: 'Public'});
 
   const applyLeave = useMutation({
     mutationFn: () => leaveApi.apply(form),
-    onSuccess: () => { toast.success('Leave applied!'); qc.invalidateQueries({ queryKey: ['myLeaves'] }); setShowApply(false); }
+
+    onSuccess: () => {
+      toast.success('Leave applied successfully 🎉');
+      qc.invalidateQueries({ queryKey: ['myLeaves'] });
+      qc.invalidateQueries({ queryKey: ['leaveBalance'] });
+      setShowApply(false);
+    },
+
+    onError: (error: any) => {
+      const msg =
+        error.response?.data?.message ||
+        error.response?.data ||
+        'Leave limit reached for this month';
+
+      toast.error(msg);
+    }
   });
   const cancelLeave = useMutation({
     mutationFn: (id: number) => leaveApi.cancel(id),
@@ -58,11 +78,52 @@ export const LeaveManagementPage = () => {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
+
         <div><h1 className="text-2xl font-bold text-white">Leave Management</h1><p className="text-slate-400 text-sm mt-1">Apply and track your leave requests</p></div>
         <button onClick={() => setShowApply(!showApply)} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition">
           {showApply ? 'Cancel' : '+ Apply Leave'}
         </button>
       </div>
+              {/* Leave Balance Section */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6">
+          <h3 className="text-sm font-semibold text-white mb-3">
+            📊 Monthly Leave Balance
+          </h3>
+
+          {balances.length === 0 && (
+            <p className="text-slate-500 text-sm">
+              No leave used this month.
+            </p>
+          )}
+
+          <div className="space-y-2">
+            {balances.map((b: any) => (
+              <div
+                key={b.userId}
+                className="flex justify-between items-center bg-slate-800 px-4 py-2 rounded-xl"
+              >
+                <div>
+                  <p className="text-white text-sm font-medium">
+                    {isManager ? b.userName : 'Your Balance'}
+                  </p>
+                  <p className="text-slate-400 text-xs">
+                    Used: {b.usedDays} day{b.usedDays !== 1 ? 's' : ''}
+                  </p>
+                </div>
+
+                <span
+                  className={`text-xs px-3 py-1 rounded-xl font-medium ${
+                    b.remainingDays === 0
+                      ? 'bg-red-500/20 text-red-400'
+                      : 'bg-emerald-500/20 text-emerald-400'
+                  }`}
+                >
+                  {b.remainingDays} Remaining
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
       {showApply && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6">
