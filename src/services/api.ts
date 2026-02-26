@@ -200,6 +200,7 @@ export const leaveApi = {
   getAll: (status?: string) => api.get('/leave/all', { params: status ? { status } : {} }),
   review: (id: number, d: object) => api.put(`/leave/${id}/review`, d),
   cancel: (id: number) => api.delete(`/leave/${id}`),
+  getBalance: () => api.get('/leave/balance')
 };
 
 // ─── Holidays (Feature 10) ────────────────────────────────────────────────────
