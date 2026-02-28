@@ -1,33 +1,27 @@
-import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from 'react';
-import type { User } from '../types'; 
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import type { User } from '../types';
+import { authApi } from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (data: { accessToken: string; refreshToken: string; user: User }) => void;
+  login: (user: User) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    try { return JSON.parse(localStorage.getItem('user') || 'null'); }
-    catch { return null; }
-  });
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = useCallback((data: { accessToken: string; refreshToken: string; user: User }) => {
-    localStorage.setItem('accessToken', data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    setUser(data.user);
+  const login = useCallback((userData: User) => {
+    setUser(userData); // ✅ Memory only
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  const logout = useCallback(async () => {
+    await authApi.logout();
     setUser(null);
+    window.location.href = "/login";
   }, []);
 
   return (

@@ -1,22 +1,28 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5053/api';
+const BASE_URL = 'https://localhost:7096/api';
 
-const api = axios.create({ baseURL: BASE_URL });
-
-// ─── Attach access token ──────────────────────────────────────────────────────
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true // 🔥 REQUIRED for httpOnly cookies
 });
 
-// ─── Auto-refresh on 401 ──────────────────────────────────────────────────────
-let isRefreshing = false;
-let failedQueue: Array<{ resolve: (v: string) => void; reject: (e: unknown) => void }> = [];
 
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token!));
+// ─── Auto-refresh on 401 ─────────────────────────────────────────────
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown) => {
+  failedQueue.forEach(p => {
+    if (error) {
+      p.reject(error);
+    } else {
+      p.resolve();
+    }
+  });
   failedQueue = [];
 };
 
@@ -26,36 +32,26 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return api(originalRequest);
-        });
+        }).then(() => api(originalRequest));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
       try {
-        const res = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
-        const { accessToken, refreshToken: newRefresh } = res.data;
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', newRefresh);
-        processQueue(null, accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        // 🔥 Refresh using cookie (NO BODY)
+        await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+
+        processQueue(null);
         return api(originalRequest);
+
       } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.clear();
-        window.location.href = '/login';
+        processQueue(refreshError);
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -86,7 +82,7 @@ export const authApi = {
   verify2FALogin: (tempToken: string, code: string) =>
     api.post('/auth/verify-2fa-login', { tempToken, code }),
   register: (d: object) => api.post('/auth/register', d),
-  refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
+  refresh: () => api.post('/auth/refresh'),
   logout: () => api.post('/auth/logout'),
   getUsers: () => api.get('/auth/users'),
   // Two-Factor Authentication
@@ -200,6 +196,8 @@ export const leaveApi = {
   getAll: (status?: string) => api.get('/leave/all', { params: status ? { status } : {} }),
   review: (id: number, d: object) => api.put(`/leave/${id}/review`, d),
   cancel: (id: number) => api.delete(`/leave/${id}`),
+  getBalance: () => api.get('/leave/balance'),
+  reviewFromEmail: (token: string, status: string) => api.post('/leave/email-review', { token, status })
 };
 
 // ─── Holidays (Feature 10) ────────────────────────────────────────────────────
@@ -321,6 +319,11 @@ export const wfhApi = {
     api.get('/wfh-requests/team-monthly',
       { params: { month, year } })
        .then(r => r.data),
+
+    reviewFromEmail: (token: string, status: string) =>
+    api.post('/wfh-requests/review', null, {
+      params: { token, status }
+    }).then(r => r.data),     
 
 
 };

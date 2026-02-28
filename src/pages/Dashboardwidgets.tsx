@@ -188,14 +188,16 @@ const location = useLocation();
   useEffect(() => {
     const off = onEvent('ReceiveNotification', (data: unknown) => {
       const n = data as { title: string; message: string; type: string };
-      // Show toast + update count
+      // Show toast
       if (n.type === 'Success') toast.success(`${n.title}: ${n.message}`);
       else if (n.type === 'Warning') toast.warning(`${n.title}: ${n.message}`);
       else toast.info(`${n.title}: ${n.message}`);
+      
+      // Refresh notification count
       qc.invalidateQueries({ queryKey: ['notifCount'] });
     });
-    return off;
-  }, [onEvent]);
+    return () => off();
+  }, [onEvent, toast, qc]);
 
   useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {

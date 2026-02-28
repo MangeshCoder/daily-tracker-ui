@@ -4,110 +4,222 @@ import { eodApi,presenceApi,kudosApi } from '../services/api';
 import { UserPresence } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/Authcontext';
+import { X } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Feature 6: EOD Report Modal
 // ═══════════════════════════════════════════════════════════════════════════════
-interface EODModalProps { open: boolean; onClose: () => void; }
+interface EODReportModalProps {
+  open: boolean;
+  onClose: () => void;
+}
 
-const MOODS = [
-  { value: 'Great', emoji: '🚀', label: 'Great' },
-  { value: 'Good', emoji: '😊', label: 'Good' },
-  { value: 'Okay', emoji: '😐', label: 'Okay' },
-  { value: 'Tired', emoji: '😴', label: 'Tired' },
-  { value: 'Stressed', emoji: '😰', label: 'Stressed' },
+const MOOD_OPTIONS = [
+  { value: 'Great', emoji: '🚀', label: 'Great - Productive Day!' },
+  { value: 'Good', emoji: '😊', label: 'Good - On Track' },
+  { value: 'Okay', emoji: '😐', label: 'Okay - Normal Day' },
+  { value: 'Tired', emoji: '😴', label: 'Tired - Exhausted' },
+  { value: 'Stressed', emoji: '😰', label: 'Stressed - Challenging' },
 ];
 
-export const EODReportModal = ({ open, onClose }: EODModalProps) => {
+export const EODReportModal = ({ open, onClose }: EODReportModalProps) => {
+  // Form state
   const [form, setForm] = useState({
-    whatWasDone: '', blockers: '', planForTomorrow: '', learnings: '', moodRating: 'Good'
+    whatWasDone: '',
+    blockers: '',
+    planForTomorrow: '',
+    learnings: '',
+    moodRating: 'Good',
   });
+
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: existing } = useQuery({
+  // Fetch existing EOD report for today (if any)
+  const { data: existingReport, isLoading: isFetching } = useQuery({
     queryKey: ['eodToday'],
     queryFn: () => eodApi.getToday().then(r => r.data),
-    enabled: open,
+    enabled: open, // Only fetch when modal is open
   });
 
-  const submit = useMutation({
+  // Pre-fill form if editing existing report
+  if (existingReport && form.whatWasDone === '') {
+    setForm({
+      whatWasDone: existingReport.whatWasDone,
+      blockers: existingReport.blockers || '',
+      planForTomorrow: existingReport.planForTomorrow || '',
+      learnings: existingReport.learnings || '',
+      moodRating: existingReport.moodRating || 'Good',
+    });
+  }
+
+  // Submit EOD Report mutation
+  const submitMutation = useMutation({
     mutationFn: () => eodApi.submit(form),
     onSuccess: () => {
-      toast.success('EOD report submitted! Great work today 🎉');
+      toast.success('✅ EOD report submitted! Great work today 🎉');
+      // Reset form
+      setForm({
+        whatWasDone: '',
+        blockers: '',
+        planForTomorrow: '',
+        learnings: '',
+        moodRating: 'Good',
+      });
+      // Refresh the cache
       qc.invalidateQueries({ queryKey: ['eodToday'] });
+      qc.invalidateQueries({ queryKey: ['eodHistory'] });
       onClose();
     },
-    onError: () => toast.error('Failed to submit report. Are you checked in?')
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to submit report';
+      toast.error(`❌ ${message}`);
+    },
   });
 
   if (!open) return null;
 
+  const isLoading = submitMutation.isPending;
+  const isUpdating = existingReport ? true : false;
+
+  // Form fields configuration
   const fields = [
-    { key: 'whatWasDone', label: '✅ What did you accomplish today?', placeholder: 'List your key accomplishments...', required: true },
-    { key: 'blockers', label: '🚫 Blockers or issues?', placeholder: 'Any blockers, bugs, or issues you faced...' },
-    { key: 'planForTomorrow', label: '📋 Plan for tomorrow?', placeholder: 'What will you work on tomorrow...' },
-    { key: 'learnings', label: '💡 Learnings?', placeholder: 'Something new you learned today...' },
+    {
+      key: 'whatWasDone',
+      label: '✅ What did you accomplish today?',
+      placeholder: 'List your key accomplishments, features completed, bugs fixed...',
+      required: true,
+      rows: 3,
+    },
+    {
+      key: 'blockers',
+      label: '🚫 Blockers or issues?',
+      placeholder: 'Any blockers, bugs, dependencies, or issues you faced...',
+      required: false,
+      rows: 2,
+    },
+    {
+      key: 'planForTomorrow',
+      label: '📋 Plan for tomorrow?',
+      placeholder: 'What will you work on tomorrow? What are your priorities?',
+      required: false,
+      rows: 2,
+    },
+    {
+      key: 'learnings',
+      label: '💡 Learnings?',
+      placeholder: 'Something new you learned today, best practices, insights...',
+      required: false,
+      rows: 2,
+    },
   ];
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-900 to-slate-800">
           <div>
-            <h3 className="text-white font-semibold">📝 End of Day Report</h3>
-            <p className="text-slate-400 text-xs mt-0.5">Wrap up your day — takes 2 minutes</p>
+            <h3 className="text-white font-semibold text-lg">📝 End of Day Report</h3>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {isUpdating
+                ? '🔄 Update your EOD report'
+                : 'Wrap up your day — takes 2 minutes'}
+            </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition">✕</button>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition"
+          >
+            <X size={20} />
+          </button>
         </div>
 
+        {/* Body - Scrollable */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
-          {existing && (
+          {/* Already submitted badge */}
+          {isUpdating && (
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-              <p className="text-emerald-400 text-xs">✅ You already submitted today's EOD report. You can update it.</p>
+              <p className="text-emerald-400 text-xs font-medium">
+                ✅ You already submitted today's EOD report. You can update it.
+              </p>
             </div>
           )}
 
-          {fields.map(f => (
-            <div key={f.key}>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                {f.label} {f.required && <span className="text-red-400">*</span>}
+          {/* Loading state */}
+          {isFetching && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
+              <p className="text-blue-400 text-xs">Loading your report...</p>
+            </div>
+          )}
+
+          {/* Text fields */}
+          {fields.map((field) => (
+            <div key={field.key}>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {field.label}
+                {field.required && <span className="text-red-400 ml-1">*</span>}
               </label>
               <textarea
-                value={(form as Record<string, string>)[f.key]}
-                onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                rows={3}
-                className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder:text-slate-600"
+                value={form[field.key as keyof typeof form]}
+                onChange={(e) =>
+                  setForm({ ...form, [field.key]: e.target.value })
+                }
+                placeholder={field.placeholder}
+                rows={field.rows}
+                className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                {(form[field.key as keyof typeof form] as string).length} characters
+              </p>
             </div>
           ))}
 
           {/* Mood selector */}
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-2">How are you feeling?</label>
-            <div className="flex gap-2">
-              {MOODS.map(mood => (
-                <button key={mood.value} onClick={() => setForm(p => ({ ...p, moodRating: mood.value }))}
-                  className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border transition text-xs ${
+            <label className="block text-sm font-medium text-slate-300 mb-3">
+              😊 How was your mood today?
+            </label>
+            <div className="grid grid-cols-5 gap-2">
+              {MOOD_OPTIONS.map((mood) => (
+                <button
+                  key={mood.value}
+                  onClick={() => setForm({ ...form, moodRating: mood.value })}
+                  className={`flex flex-col items-center justify-center py-3 rounded-xl border-2 transition ${
                     form.moodRating === mood.value
-                      ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-slate-600'
-                  }`}>
-                  <span className="text-2xl mb-1">{mood.emoji}</span>
-                  {mood.label}
+                      ? 'border-blue-500 bg-blue-500/20'
+                      : 'border-slate-700 bg-slate-800 hover:border-slate-600'
+                  }`}
+                  title={mood.label}
+                >
+                  <span className="text-2xl">{mood.emoji}</span>
+                  <span className="text-xs text-slate-400 mt-1 text-center">
+                    {mood.label.split(' ')[0]}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="p-5 border-t border-slate-800">
+        {/* Footer */}
+        <div className="p-5 border-t border-slate-800 flex gap-3 bg-slate-800/50">
           <button
-            onClick={() => submit.mutate()}
-            disabled={submit.isPending || !form.whatWasDone.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition">
-            {submit.isPending ? 'Submitting...' : '📤 Submit EOD Report'}
+            onClick={onClose}
+            disabled={isLoading}
+            className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => submitMutation.mutate()}
+            disabled={isLoading || !form.whatWasDone.trim()}
+            className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2"
+          >
+            {isLoading && (
+              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
+            {isLoading ? 'Submitting...' : isUpdating ? '📝 Update Report' : '✅ Submit Report'}
           </button>
         </div>
       </div>

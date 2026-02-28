@@ -41,15 +41,10 @@ export const LoginPage = () => {
           return; 
         }
 
-        if (res.data.tokens) {
-          login({
-            accessToken: res.data.tokens.accessToken,
-            refreshToken: res.data.tokens.refreshToken,
-            user: res.data.tokens.user
-          });
-
-          navigate('/');
-        }
+      if (!res.data.requiresTwoFactor) {
+        login(res.data.user);
+        navigate('/');
+      }
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed.');
@@ -68,13 +63,9 @@ export const LoginPage = () => {
     setError('');
     try {
       const res = await authApi.verify2FALogin(tempToken, code);
-      login({
-        accessToken: res.data.accessToken,
-        refreshToken: res.data.refreshToken,
-        user: res.data.user,
-      });
+      login(res.data.user);
       navigate('/');
-    } catch {
+    } catch (err: any) {
       setError('Invalid verification code. Please try again.');
     } finally {
       setVerify2FALoading(false);
@@ -260,11 +251,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         code: otp
       });
 
-      login({
-        accessToken: res.data.accessToken,
-        refreshToken: res.data.refreshToken,
-        user: res.data.user
-      });
+      login(res.data.user);
 
       navigate('/');
     }

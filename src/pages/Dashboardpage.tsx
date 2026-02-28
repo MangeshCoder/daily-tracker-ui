@@ -4,6 +4,7 @@ import { DashboardSummary } from '../types';
 import { useAuth } from '../context/Authcontext';
 import { SupportMediaDisplay } from '../components/SupportMediaDisplay';
 import Swal from 'sweetalert2';
+import { EODReportModal } from './Teamcomponents'; 
 
 const formatISTTime = (dateString?: string) => {
   if (!dateString) return "--:--";
@@ -80,6 +81,7 @@ export const DashboardPage = () => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
+  const [showEODModal, setShowEODModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -365,6 +367,21 @@ const handleCheckOut = async () => {
           <p className="text-slate-500 text-sm mt-1">Click "Check In" to begin tracking your work</p>
         </div>
       )}
+      {/* Add this button somewhere visible - e.g., top of dashboard */}
+      <div className="flex justify-between items-center mb-6 p-2">
+        {/* EOD Report Button */}
+        <button
+          onClick={() => setShowEODModal(true)}
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-lg"
+          >
+          📝 Submit EOD Report
+        </button>
+              {/* EOD Report Modal - renders at end */}
+        <EODReportModal
+          open={showEODModal}
+          onClose={() => setShowEODModal(false)}
+          />
+      </div>
     </div>
   );
 };
