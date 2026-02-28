@@ -20,17 +20,14 @@ export const SignalRProvider = ({ children }: { children: ReactNode }) => {
   const listenersRef = useRef<Map<string, Set<(...args: unknown[]) => void>>>(new Map());
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-
     const connect = async () => {
       try {
         // Dynamic import so SignalR only loads when user is authenticated
         const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
 
         const conn = new HubConnectionBuilder()
-          .withUrl('http://localhost:5000/hubs/notifications', {
-            accessTokenFactory: () => localStorage.getItem('accessToken') ?? ''
+          .withUrl('http://localhost:5053/hubs/notifications', {
+            withCredentials: true // 🔥 THIS IS THE FIX
           })
           .withAutomaticReconnect([0, 2000, 5000, 10000])
           .configureLogging(LogLevel.Warning)
