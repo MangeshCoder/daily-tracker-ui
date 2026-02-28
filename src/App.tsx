@@ -14,6 +14,7 @@ import { LeaveManagementPage } from './pages/LeaveManagementPage';
 import { WFHRequestPage } from './pages/WFHRequestPage';
 import { ManagerWFHDashboard } from './pages/ManagerWFHDashboard';
 import { EmailAction } from './pages/EmailAction';
+import { WFHEmailActionPage } from './pages/WFHEmailActionPage';
 // ═══════════════════════════════════════════════════════════════════════════════
 // LAZY PAGE IMPORTS (Feature 15: Code splitting)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -250,6 +251,7 @@ const AppRoutes = () => {
         />
       </Route>
       <Route path="/email-action" element={<EmailAction />} />
+      <Route path="/wfh-email-action" element={<WFHEmailActionPage />} />
 
       {/* ─── 404 Route ───────────────────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" />} />
