@@ -8,10 +8,10 @@ export const WFHEmailActionPage = () => {
   const [message, setMessage] = useState("Processing request...");
   const [error, setError] = useState(false);
 
-  const hasCalled = useRef(false); // ✅ Prevent double execution
+  const hasCalled = useRef(false); 
 
   useEffect(() => {
-    if (hasCalled.current) return;   // 🔥 Important
+    if (hasCalled.current) return;  
     hasCalled.current = true;
 
     const token = searchParams.get("token");

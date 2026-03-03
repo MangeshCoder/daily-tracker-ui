@@ -66,6 +66,7 @@ export const Layout = () => {
         { to: '/', label: 'Dashboard', icon: '🏠', exact: true },
         { to: '/analytics', label: 'Analytics', icon: '📊' },
         { to: '/history', label: 'History', icon: '📅' },
+        { to: '/chat', icon: '💬', label: 'Messages' },  // ← NEW
       ],
     },
     {
@@ -100,15 +101,16 @@ export const Layout = () => {
   // ═══════════════════════════════════════════════════════════════════════
   // MANAGER NAVIGATION ITEMS
   // ═══════════════════════════════════════════════════════════════════════
-  const managerSection = {
-    title: 'Manager',
-    icon: '👨‍💼',
-    items: [
-      { to: '/manager', label: 'Team Dashboard', icon: '📋' },
-      { to: '/manager/eod-reviews', label: 'EOD Reviews', icon: '📝' },
-      { to: '/manager/wfh-dashboard', label: 'Employee Attendance', icon: '🗓️' },
-    ],
-  };
+    const managerSection = {
+      title: 'Manager',
+      icon: '👨‍💼',
+      items: [
+        { to: '/manager', label: 'Team Dashboard', icon: '📋' },
+        { to: '/manager/assign-role', label: 'Assign Roles', icon: '👥' },  // ✅ ADD THIS
+        { to: '/manager/eod-reviews', label: 'EOD Reviews', icon: '📝' },
+        { to: '/manager/wfh-dashboard', label: 'Employee Attendance', icon: '🗓️' },
+      ],
+    };
 
   return (
     <div className={`flex h-screen overflow-hidden ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
