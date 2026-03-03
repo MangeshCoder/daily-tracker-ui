@@ -26,7 +26,7 @@ export const SignalRProvider = ({ children }: { children: ReactNode }) => {
         const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
 
         const conn = new HubConnectionBuilder()
-          .withUrl('http://localhost:5053/hubs/notifications', {
+          .withUrl('https://localhost:7096/hubs/notifications', {
             withCredentials: true // 🔥 THIS IS THE FIX
           })
           .withAutomaticReconnect([0, 2000, 5000, 10000])

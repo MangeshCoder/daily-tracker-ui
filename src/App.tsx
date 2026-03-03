@@ -15,6 +15,7 @@ import { WFHRequestPage } from './pages/WFHRequestPage';
 import { ManagerWFHDashboard } from './pages/ManagerWFHDashboard';
 import { EmailAction } from './pages/EmailAction';
 import { WFHEmailActionPage } from './pages/WFHEmailActionPage';
+import { AssignRole } from './pages/AssignRole';
 // ═══════════════════════════════════════════════════════════════════════════════
 // LAZY PAGE IMPORTS (Feature 15: Code splitting)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -41,6 +42,9 @@ const MyReportPage = lazy(() =>
 const KudosPage = lazy(() =>
   import('./pages/KudosPage').then(m => ({ default: m.KudosPage }))
 );
+// ADD this line right after the KudosPage import
+const ChatPage = lazy(() => import('./pages/Chatpage').then(m => ({ default: m.ChatPage })));
+
 const TwoFactorSettingsPage = lazy(() =>
   import('./pages/TwoFactorSettingsPage').then(m => ({ default: m.TwoFactorSettingsPage }))
 );
@@ -71,6 +75,8 @@ const RegisterPage = lazy(() =>
 const ForgotPasswordPage = lazy(() =>
   import('./pages/ForgotPasswordPage').then(m => ({ default: m.default }))
 );
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROUTE GUARDS
@@ -162,6 +168,14 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="chat"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <ChatPage />
+            </Suspense>
+          }
+        />
+        <Route
           path="analytics"
           element={
             <Suspense fallback={<SkeletonDashboard />}>
@@ -249,6 +263,14 @@ const AppRoutes = () => {
             </ManagerRoute>
           }
         />
+        <Route
+            path="manager/assign-role"
+            element={
+              <ManagerRoute>
+                <AssignRole />
+              </ManagerRoute>
+            }
+          />
       </Route>
       <Route path="/email-action" element={<EmailAction />} />
       <Route path="/wfh-email-action" element={<WFHEmailActionPage />} />

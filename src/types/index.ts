@@ -175,3 +175,85 @@ export interface VerifyOtpRequest {
   code: string;
 }
 
+export interface ConversationSummary {
+  id: number;
+  type: 'Direct' | 'Group';
+  displayName: string;
+  avatarUrl?: string;
+  otherUserId?: number;
+  lastMessagePreview?: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+  memberCount: number;
+  isMuted: boolean;
+}
+
+export interface ConversationDetail {
+  id: number;
+  type: 'Direct' | 'Group';
+  groupName?: string;
+  groupAvatar?: string;
+  createdAt: string;
+  myRole: 'Member' | 'Admin';
+  members: MemberInfo[];
+}
+
+export interface MemberInfo {
+  userId: number;
+  fullName: string;
+  email: string;
+  role: string;
+  joinedAt: string;
+}
+
+export interface ChatMessage {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  senderName: string;
+  senderInitial: string;
+  content: string;
+  messageType: 'Text' | 'Image' | 'File' | 'System';
+  attachmentUrl?: string;
+  attachmentName?: string;
+  isDeleted: boolean;
+  isEdited: boolean;
+  sentAt: string;
+  editedAt?: string;
+  replyTo?: ReplyPreview;
+  reactions: Reaction[];
+  readByUserIds: number[];
+}
+
+export interface ReplyPreview {
+  id: number;
+  senderName: string;
+  contentPreview: string;
+}
+
+export interface Reaction {
+  emoji: string;
+  count: number;
+  userIds: number[];
+}
+
+export interface UserChatProfile {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+  onlineStatus: 'Online' | 'Offline' | 'Busy' | 'Away';
+  statusMessage?: string;
+}
+
+export interface SendMessagePayload {
+  conversationId: number;
+  content: string;
+  messageType?: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  replyToMessageId?: number;
+}
+
+
+
