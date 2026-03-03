@@ -225,7 +225,7 @@ return (
 };
 
 export const RegisterPage = () => {
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'Developer' });
+  const [form, setForm] = useState({ fullName: '', email: '', password: ''});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -312,7 +312,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               className="w-full bg-slate-700 text-white rounded-xl px-4 py-3"
             />
 
-            <select
+            {/* <select
               value={form.role}
               onChange={e => setForm({ ...form, role: e.target.value })}
               className="w-full bg-slate-700 text-white rounded-xl px-4 py-3"
@@ -320,7 +320,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               <option value="Developer">Developer</option>
               <option value="TeamLead">Team Lead</option>
               <option value="Manager">Manager</option>
-            </select>
+            </select> */}
 
             <button
               type="submit"

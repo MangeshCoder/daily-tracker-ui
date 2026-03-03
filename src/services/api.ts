@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { ChatMessage, ConversationDetail, ConversationSummary, SendMessagePayload, UserChatProfile } from '../types';
 
 const BASE_URL = 'https://localhost:7096/api';
 
@@ -109,6 +110,9 @@ export const authApi = {
 
   resetPassword: (data: { email: string; code: string; newPassword: string }) =>
     api.post('/auth/reset-password', data),
+  me: () => api.get('/auth/me').then(r => r.data),
+  getPendingUsers: () => api.get('/auth/pending-users'),
+  assignRole: (d: { userId: number; role: string }) => api.post('/auth/assign-role', d),
 };
 
 // ─── Daily Log ────────────────────────────────────────────────────────────────
@@ -324,8 +328,78 @@ export const wfhApi = {
     api.post('/wfh-requests/review', null, {
       params: { token, status }
     }).then(r => r.data),     
-
-
 };
+
+export const chatApi = {
+  // Conversations
+  getConversations: (): Promise<ConversationSummary[]> =>
+    api.get('/chat/conversations').then(r => r.data),
+
+  openDirect: (otherUserId: number): Promise<ConversationSummary> =>
+    api.post(`/chat/conversations/direct/${otherUserId}`)
+      .then(r => r.data),
+
+  createGroup: (
+    data: { groupName: string; groupAvatar?: string; memberIds: number[] }
+  ): Promise<ConversationSummary> =>
+    api.post('/chat/conversations/group', data)
+      .then(r => r.data),
+
+  getConversationDetail: (convId: number): Promise<ConversationDetail> =>
+    api.get(`/chat/conversations/${convId}`).then(r => r.data),
+
+  getUsers: (): Promise<UserChatProfile[]> =>
+    api.get('/chat/users').then(r => r.data),
+  
+  getOnlineUsers: () =>
+    api.get('/chat/online-users'),
+
+  // Messages
+  getMessages: (convId: number, pageSize = 50, beforeMessageId?: number): Promise<ChatMessage[]> =>
+    api.get(`/chat/conversations/${convId}/messages`, {
+      params: { pageSize, beforeMessageId }
+    }).then(r => r.data),
+
+  sendMessage: (data: SendMessagePayload): Promise<ChatMessage> =>
+    api.post('/chat/messages', data).then(r => r.data),
+
+  editMessage: (messageId: number, content: string): Promise<ChatMessage> =>
+    api.put(`/chat/messages/${messageId}`, { content }).then(r => r.data),
+
+  deleteMessage: (messageId: number) =>
+    api.delete(`/chat/messages/${messageId}`).then(r => r.data),
+
+  searchMessages: (convId: number, q: string) =>
+    api.get(`/chat/conversations/${convId}/search`, { params: { q } }),
+
+  // Read
+  markRead: (convId: number) =>
+    api.post(`/chat/conversations/${convId}/read`),
+
+  getUnreadCounts: (): Promise<Record<number, number>> =>
+    api.get('/chat/unread-counts').then(r => r.data),
+
+  // Reactions
+  react: (messageId: number, emoji: string) =>
+    api.post(`/chat/messages/${messageId}/react`, { emoji }),
+
+  // Group management
+  addMembers: (convId: number, userIds: number[]) =>
+    api.post(`/chat/conversations/${convId}/members`, { userIds }),
+
+  removeMember: (convId: number, targetUserId: number) =>
+    api.delete(`/chat/conversations/${convId}/members/${targetUserId}`),
+
+  leaveGroup: (convId: number) =>
+    api.post(`/chat/conversations/${convId}/leave`),
+
+  updateGroupInfo: (convId: number, data: { groupName?: string; groupAvatar?: string }) =>
+    api.put(`/chat/conversations/${convId}/group-info`, data),
+
+  promoteAdmin: (convId: number, targetUserId: number) =>
+    api.post(`/chat/conversations/${convId}/members/${targetUserId}/promote`),
+};
+
+
 
 export default api;
