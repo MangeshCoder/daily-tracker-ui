@@ -8,6 +8,20 @@ import { Trash2 } from "lucide-react";
 
 const supportTypes = ['Technical', 'CodeReview', 'Debugging', 'Deployment', 'Other'];
 
+const formatISTTime = (dateString?: string) => {
+  if (!dateString) return "--:--";
+
+  // Force treat backend time as UTC
+  const utcDate = new Date(dateString + "Z");
+
+  return utcDate.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
 const defaultForm: CreateSupportDto = {
   supportedDeveloperId: 0,
   issueDescription: '',
@@ -270,12 +284,9 @@ export const SupportPage = () => {
                 <h3 className="text-white font-semibold text-sm">
                   {log.supportedDeveloperName}
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  {new Date(log.supportedAt).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formatISTTime(log.supportedAt)}
+                  </p>
               </div>
 
               <button

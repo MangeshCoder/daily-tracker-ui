@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ChatMessage, ConversationDetail, ConversationSummary, SendMessagePayload, UserChatProfile } from '../types';
+import { ChatApiResponse, MessageHistory } from '../types/chat';
 
 const BASE_URL = 'https://localhost:7096/api';
 
@@ -113,6 +114,12 @@ export const authApi = {
   me: () => api.get('/auth/me').then(r => r.data),
   getPendingUsers: () => api.get('/auth/pending-users'),
   assignRole: (d: { userId: number; role: string }) => api.post('/auth/assign-role', d),
+};
+
+// ─── AI Chat ──────────────────────────────────────────────────────────────────
+export const aiChatApi = {
+  sendMessage: (message: string, history: MessageHistory[]) =>
+    api.post<ChatApiResponse>('/aichat/send', { message, history }),
 };
 
 // ─── Daily Log ────────────────────────────────────────────────────────────────
