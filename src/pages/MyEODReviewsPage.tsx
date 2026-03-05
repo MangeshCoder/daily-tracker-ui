@@ -106,7 +106,19 @@ export const MyEODReviewsPage = () => {
 // Report Card Component
 const ReportCard = ({ report, getMoodEmoji }: { report: EODReport; getMoodEmoji: (mood: string) => string }) => {
   const [expanded, setExpanded] = React.useState<boolean>(false);
+  const formatISTDate = (dateString?: string) => {
+    if (!dateString) return "--";
 
+    const utcDate = new Date(dateString + "Z");
+
+    return utcDate.toLocaleDateString("en-IN", {
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    });
+  };
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition">
       {/* Card Header */}
@@ -117,17 +129,14 @@ const ReportCard = ({ report, getMoodEmoji }: { report: EODReport; getMoodEmoji:
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
             <p className="text-white font-semibold">
-              {new Date(report.reportDate).toLocaleDateString('en-IN', {
-                weekday: 'short',
-                day: 'numeric',
-                month: 'short',
-                year: '2-digit',
-              })}
+               {new Date(report.reportDate).toLocaleDateString('en-IN', {
+                 weekday: 'long', day: 'numeric', month: 'short', year: 'numeric'
+               })}
             </p>
             <span className="text-2xl">{getMoodEmoji(report.moodRating)}</span>
           </div>
           <p className="text-xs text-slate-400">
-            Submitted {new Date(report.submittedAt).toLocaleTimeString('en-IN')}
+            Submitted {formatISTDate(report.submittedAt)}
           </p>
         </div>
 

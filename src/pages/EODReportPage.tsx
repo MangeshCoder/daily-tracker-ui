@@ -81,6 +81,20 @@ export const EODReportPage = () => {
     submit.mutate();
   };
 
+  const formatISTTime = (dateString?: string) => {
+    if (!dateString) return "--:--";
+
+    // Force treat backend time as UTC
+    const utcDate = new Date(dateString + "Z");
+
+    return utcDate.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    });
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -251,7 +265,7 @@ export const EODReportPage = () => {
                 <div>
                   <p className="text-xs text-slate-400 mb-1">Submitted At</p>
                   <p className="text-white text-sm">
-                    {new Date(todayReport.submittedAt).toLocaleTimeString('en-IN')}
+                    {formatISTTime(todayReport.submittedAt)}
                   </p>
                 </div>
                 <div>

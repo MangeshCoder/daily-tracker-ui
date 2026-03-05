@@ -16,6 +16,7 @@ import { ManagerWFHDashboard } from './pages/ManagerWFHDashboard';
 import { EmailAction } from './pages/EmailAction';
 import { WFHEmailActionPage } from './pages/WFHEmailActionPage';
 import { AssignRole } from './pages/AssignRole';
+import AiChatWidget from './components/AiChatWidget';
 // ═══════════════════════════════════════════════════════════════════════════════
 // LAZY PAGE IMPORTS (Feature 15: Code splitting)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -102,6 +103,7 @@ const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
   return (
+    <>
     <Routes>
       {/* ─── Auth Routes ──────────────────────────────────────────────────── */}
       <Route
@@ -278,6 +280,8 @@ const AppRoutes = () => {
       {/* ─── 404 Route ───────────────────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+    <AiChatWidget />
+    </>
   );
 };
 
@@ -300,7 +304,7 @@ function App() {
           </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
-      {(import.meta as any).env.DEV && <ReactQueryDevtools />}
+      {/* {(import.meta as any).env.DEV && <ReactQueryDevtools />} */}
     </QueryClientProvider>
   );
 }

@@ -29,6 +29,20 @@ const columnColors: Record<SupportType, string> = {
   Other: "from-slate-600 to-slate-700",
 };
 
+const formatISTTime = (dateString?: string) => {
+  if (!dateString) return "--:--";
+
+  // Force treat backend time as UTC
+  const utcDate = new Date(dateString + "Z");
+
+  return utcDate.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
 export const SupportKanbanBoard = ({ logs, onDelete }: Props) => {
   const formatTime = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -120,10 +134,7 @@ export const SupportKanbanBoard = ({ logs, onDelete }: Props) => {
                         </span>
 
                         <span className="text-slate-500">
-                          {new Date(log.supportedAt).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                            {formatISTTime(log.supportedAt)}
                         </span>
                       </div>
                     </div>
