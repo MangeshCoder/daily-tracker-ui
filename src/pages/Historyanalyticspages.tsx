@@ -33,6 +33,20 @@ export const HistoryPage = () => {
     Absent: 'bg-red-500/20 text-red-400',
   };
 
+  const formatISTTime = (dateString?: string) => {
+    if (!dateString) return "--:--";
+
+    // Force treat backend time as UTC
+    const utcDate = new Date(dateString + "Z");
+
+    return utcDate.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    });
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -83,8 +97,8 @@ export const HistoryPage = () => {
                   </span>
                 </div>
                 <div className="flex gap-4 text-xs text-slate-500">
-                  <span>🕐 {log.checkInTime ? new Date(log.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</span>
-                  <span>🕐 {log.checkOutTime ? new Date(log.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</span>
+                  <span>🕐 {log.checkInTime ? formatISTTime(log.checkInTime) : '--'}</span>
+                  <span>🕐 {log.checkOutTime ? formatISTTime(log.checkOutTime) : '--'}</span>
                   <span className="text-blue-400">⏱ {log.workHours}</span>
                   <span>✅ {log.tasks.filter(t => t.status === 'Completed').length} tasks</span>
                 </div>
@@ -104,13 +118,13 @@ export const HistoryPage = () => {
               <div className="bg-slate-800/50 rounded-xl p-3">
                 <p className="text-xs text-slate-500 mb-1">Check In</p>
                 <p className="text-white font-semibold">
-                  {selectedLog.checkInTime ? new Date(selectedLog.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                  {selectedLog.checkInTime ? formatISTTime(selectedLog.checkInTime) : '--'}
                 </p>
               </div>
               <div className="bg-slate-800/50 rounded-xl p-3">
                 <p className="text-xs text-slate-500 mb-1">Check Out</p>
                 <p className="text-white font-semibold">
-                  {selectedLog.checkOutTime ? new Date(selectedLog.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                  {selectedLog.checkOutTime ? formatISTTime(selectedLog.checkOutTime) : '--'}
                 </p>
               </div>
               <div className="bg-slate-800/50 rounded-xl p-3">
