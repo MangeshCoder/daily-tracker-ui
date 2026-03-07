@@ -31,6 +31,12 @@ const TasksPage = lazy(() =>
 const SupportPage = lazy(() =>
   import('./pages/Supportpage').then(m => ({ default: m.SupportPage }))
 );
+const GoalsWidget = lazy(() =>
+  import('./pages/Dashboardwidgets').then(m => ({ default: m.GoalsWidget }))
+);
+const GoalHistoryPage = lazy(() =>
+  import('./pages/GoalHistoryPage').then(m => ({ default: m.GoalHistoryPage }))
+);
 const HistoryPage = lazy(() =>
   import('./pages/Historyanalyticspages').then(m => ({ default: m.HistoryPage }))
 );
@@ -158,6 +164,22 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<SkeletonDashboard />}>
               <SupportPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="Goals"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <GoalsWidget />
+            </Suspense>
+          }
+        />
+        <Route
+          path="Goal history"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <GoalHistoryPage />
             </Suspense>
           }
         />
@@ -304,7 +326,7 @@ function App() {
           </ToastProvider>
         </ThemeProvider>
       </BrowserRouter>
-      {/* {(import.meta as any).env.DEV && <ReactQueryDevtools />} */}
+      {(import.meta as any).env.DEV && <ReactQueryDevtools />}
     </QueryClientProvider>
   );
 }
