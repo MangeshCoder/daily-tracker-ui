@@ -175,6 +175,8 @@ export const goalsApi = {
   setGoal: (d: object) => api.post('/goals', d),
   getProgress: () => api.get('/goals/today'),
   getTrend: (days = 14) => api.get(`/goals/trend?days=${days}`),
+  getHistory: (preset: 'week' | 'month') =>api.get(`/goals/history?preset=${preset}`),
+  getHistoryRange:  (from: string, to: string) => api.get(`/goals/history?from=${from}&to=${to}`),
 };
 
 // ─── EOD Reports (Feature 6) ──────────────────────────────────────────────────
