@@ -32,12 +32,40 @@ export interface DashboardSummary { todayLog?: DailyLog; tasksCompleted: number;
 export interface RefreshTokenRequest { refreshToken: string; }
 
 // ─── Feature 4: Goals ─────────────────────────────────────────────────────────
-export interface SetGoalDto { targetWorkMinutes: number; targetTasksCompleted: number; targetBreakMinutes: number; managerSetNote?: string; }
+export interface SetGoalDto { targetWorkMinutes: number; targetTasksCompleted: number; targetSupportGiven: number; targetBreakMinutes: number; managerSetNote?: string; }
 export interface GoalProgress {
   goal: SetGoalDto;
-  actualWorkMinutes: number; actualTasksCompleted: number; actualBreakMinutes: number;
-  workProgress: number; taskProgress: number; breakProgress: number;
+  actualWorkMinutes: number; actualTasksCompleted: number; actualBreakMinutes: number; actualSupportGiven: number;
+  workProgress: number; taskProgress: number; breakProgress: number; supportProgress: number;
   productivityScore: number; scoreGrade: string; insights: string[];
+}
+export interface GoalHistoryEntry {
+  date: string;
+  dayName: string;       // "Mon"
+  dateLabel: string;     // "Jan 15"
+
+  // Targets
+  targetWorkMinutes: number;
+  targetTasksCompleted: number;
+  targetSupportGiven: number;
+  targetBreakMinutes: number;
+
+  // Actuals
+  actualWorkMinutes: number;
+  actualTasksCompleted: number;
+  actualSupportGiven: number;
+  actualBreakMinutes: number;
+
+  // Progress 0–100
+  workProgress: number;
+  taskProgress: number;
+  supportProgress: number;
+  breakProgress: number;
+
+  // Score
+  productivityScore: number;
+  scoreGrade: string;    // "A" | "B" | "C" | "D"
+  goalWasSet: boolean;   // false = worked but no goal configured that day
 }
 
 // ─── Feature 6: EOD Report ────────────────────────────────────────────────────

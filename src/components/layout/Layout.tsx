@@ -66,7 +66,8 @@ export const Layout = () => {
         { to: '/', label: 'Dashboard', icon: '🏠', exact: true },
         { to: '/analytics', label: 'Analytics', icon: '📊' },
         { to: '/history', label: 'History', icon: '📅' },
-        { to: '/chat', icon: '💬', label: 'Messages' },  // ← NEW
+        { to: '/chat', icon: '💬', label: 'Messages' },
+        { to: '/kudos', label: 'Kudos', icon: '🏆' },
       ],
     },
     {
@@ -77,6 +78,9 @@ export const Layout = () => {
         { to: '/eod-reports', label: 'EOD Reports', icon: '📝' },
         { to: '/my-eod-reviews', label: 'My Reviews', icon: '📌' },
         { to: '/my-report', label: 'My Report', icon: '📥' },
+        { to: '/Goals', icon: '🎯', label: 'Goals' },
+        { to: '/Goal history', icon: '📈', label: 'Goal History' },
+        { to: '/support', label: 'Support', icon: '🤝' },
       ],
     },
     {
@@ -85,15 +89,13 @@ export const Layout = () => {
       items: [
         { to: '/leave', label: 'Leave', icon: '🗓️' },
         { to: '/request', label: 'WFH Requests', icon: '🏡' },
-        { to: '/support', label: 'Support', icon: '🤝' },
       ],
     },
     {
       title: 'System',
       icon: '⚙️',
       items: [
-        { to: '/security', label: 'Security (2FA)', icon: '🔐' },
-        { to: '/kudos', label: 'Kudos', icon: '🏆' },
+        { to: '/security', label: 'Security (2FA)', icon: '🔐' }
       ],
     },
   ];
@@ -106,7 +108,7 @@ export const Layout = () => {
       icon: '👨‍💼',
       items: [
         { to: '/manager', label: 'Team Dashboard', icon: '📋' },
-        { to: '/manager/assign-role', label: 'Assign Roles', icon: '👥' },  // ✅ ADD THIS
+        { to: '/manager/assign-role', label: 'Assign Roles', icon: '👥' },  
         { to: '/manager/eod-reviews', label: 'EOD Reviews', icon: '📝' },
         { to: '/manager/wfh-dashboard', label: 'Employee Attendance', icon: '🗓️' },
       ],
@@ -114,15 +116,13 @@ export const Layout = () => {
 
   return (
     <div className={`flex h-screen overflow-hidden ${isDark ? 'bg-slate-950 text-white' : 'bg-slate-100 text-slate-900'}`}>
-      {/* ═════════════════════════════════════════════════════════════════
-          SIDEBAR
-          ═════════════════════════════════════════════════════════════════ */}
+      {/* SIDEBAR */}
       <aside
         ref={sidebarRef}
         className={`${collapsed ? 'w-20' : 'w-64'} transition-all duration-300 flex-shrink-0 flex flex-col border-r 
         ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}
       >
-        {/* ─── Logo Section ─────────────────────────────────────────── */}
+        {/* Logo Section */}
         <div className="p-2 border-b border-slate-800/50 text-center relative">
           {/* Collapse Button */}
           <button
@@ -165,7 +165,7 @@ export const Layout = () => {
           )}
         </div>
 
-        {/* ─── Navigation Menu ─────────────────────────────────────────── */}
+        {/* Navigation Menu */}
         <nav className="flex-1 p-2 overflow-y-auto space-y-2">
           {navSections.map((section) => {
             const isOpen = openSections.includes(section.title);
