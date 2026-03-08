@@ -4,7 +4,7 @@ import { DashboardSummary } from '../types';
 import { useAuth } from '../context/Authcontext';
 import { SupportMediaDisplay } from '../components/SupportMediaDisplay';
 import Swal from 'sweetalert2';
-import { EODReportModal } from './Teamcomponents'; 
+import { EODReportModal, TeamPresencePanel } from './Teamcomponents'; 
 
 const formatISTTime = (dateString?: string) => {
   if (!dateString) return "--:--";
@@ -369,19 +369,24 @@ const handleCheckOut = async () => {
       )}
       {/* Add this button somewhere visible - e.g., top of dashboard */}
       <div className="flex justify-between items-center mb-6 p-2">
-        {/* EOD Report Button */}
         <button
           onClick={() => setShowEODModal(true)}
           className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold px-6 py-3 rounded-xl transition flex items-center gap-2 shadow-lg"
-          >
+        >
           📝 Submit EOD Report
         </button>
-              {/* EOD Report Modal - renders at end */}
-        <EODReportModal
-          open={showEODModal}
-          onClose={() => setShowEODModal(false)}
-          />
       </div>
+
+      {/* Team Presence — full width section below everything */}
+      <div className="mt-4">
+        <TeamPresencePanel />
+      </div>
+
+      {/* Modal renders here — outside all layout divs */}
+      <EODReportModal
+        open={showEODModal}
+        onClose={() => setShowEODModal(false)}
+      />
     </div>
   );
 };

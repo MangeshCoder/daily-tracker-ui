@@ -1,5 +1,10 @@
 // ─── Core Types (original) ────────────────────────────────────────────────────
-export interface User { id: number; fullName: string; email: string; role: string; isActive: boolean;}
+export interface User { id: number; fullName: string; email: string; role: string; isActive: boolean;department?:      string;
+  designation?:     string;
+  profilePhotoUrl?: string;
+  phone?:           string;
+  bio?:             string;
+  joinDate?:        string;}
 export interface AuthResponse { accessToken: string; refreshToken: string; accessTokenExpiry: string; user: User; }
 export interface LoginDto { email: string; password: string; }
 
@@ -85,11 +90,31 @@ export interface UserPresence { user: User; isAvailableForHelp: boolean; status:
 export interface GiveKudosDto { toUserId: number; message: string; badgeType: string; }
 export interface Kudos { id: number; fromUserName: string; toUserName: string; message: string; badgeType: string; givenAt: string; }
 export interface KudosSummary { user: User; totalReceived: number; totalGiven: number; badgeCounts: Record<string, number>; recentKudos: Kudos[]; }
+export interface KudosLeaderboardEntry {
+  rank:          number;
+  userId:        number;
+  userName:      string;
+  totalReceived: number;
+  totalGiven:    number;
+  badgeCounts:   Record<string, number>;
+  topBadge:      string;
+  // NOTE: no 'role' — backend DTO does not include it
+}
+
+export interface KudosLeaderboard {
+  year:        number;
+  month:       number | null;
+  periodLabel: string;        // e.g. "March 2025" or "Full Year 2025"
+  entries:     KudosLeaderboardEntry[];
+  // NOTE: property is 'entries', not 'rankings'
+}
 
 // ─── Feature 9: Leave ─────────────────────────────────────────────────────────
 export interface ApplyLeaveDto { fromDate: string; toDate: string; leaveType: string; reason: string; }
 export interface LeaveRequest { id: number; userName: string; fromDate: string; toDate: string; leaveDays: number; leaveType: string; reason: string; status: string; reviewerName?: string; reviewNote?: string; reviewedAt?: string; appliedAt: string; }
 export interface ReviewLeaveDto { status: string; reviewNote?: string; }
+export interface LeaveTypeBalanceItem {leaveType: string;entitlement: number; used: number;pending: number;remaining: number;isUnlimited: boolean;}
+export interface LeaveBalanceDto {userId: number;userName: string;year: number;balances: LeaveTypeBalanceItem[];}
 
 // ─── Feature 10: Attendance ───────────────────────────────────────────────────
 export interface Holiday { id: number; date: string; name: string; type: string; year: number; isToday: boolean; }
@@ -283,5 +308,108 @@ export interface SendMessagePayload {
   replyToMessageId?: number;
 }
 
+//Announcement Types
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  category: 'General' | 'Policy' | 'Event' | 'Urgent';
+  isPinned: boolean;
+  expiresAt: string | null;
+  createdAt: string;
+  createdByName: string;
+  isRead: boolean;
+}
+
+export interface AnnouncementsResponse {
+  pinned: Announcement[];
+  regular: Announcement[];
+  unreadCount: number;
+}
+
+export interface CreateAnnouncementDto {
+  title: string;
+  content: string;
+  category: string;
+  isPinned: boolean;
+  expiresAt: string | null;
+}
+
+export interface UserProfile {
+  id:              number;
+  fullName:        string;
+  email:           string;
+  role:            string;
+  isActive:        boolean;
+  department:      string | null;
+  designation:     string | null;
+  phone:           string | null;
+  bio:             string | null;
+  profilePhotoUrl: string | null;
+  joinDate:        string | null;
+  createdAt:       string;
+  managerId:       number | null;
+  managerName:     string | null;
+}
+
+export interface UpdateProfileDto {
+  fullName?:    string;
+  phone?:       string;
+  bio?:         string;
+  designation?: string;
+  department?:  string;
+  joinDate?:    string;  // ISO string
+}
+
+// export interface DirectoryUser {
+//   id: number;
+//   fullName: string;
+//   email: string;
+//   role: string;
+//   department: string | null;
+//   designation: string | null;
+//   phone: string | null;
+//   profilePhotoUrl: string | null;
+//   isActive: boolean;
+//   managerName: string | null;
+// }
+
+export interface UpdateEmployeeProfileDto {
+  department?:  string;
+  designation?: string;
+  joinDate?:    string;  // ISO string
+  managerId?:   number;
+}
+export type DirectoryUser = UserProfile;
+
+export type MemberDayStatus =
+  | 'Present' | 'WFH' | 'HalfDay' | 'Leave'
+  | 'Absent'  | 'Weekend' | 'Unknown';
+
+export interface CalendarMemberDay {
+  userId:          number;
+  fullName:        string;
+  profilePhotoUrl: string | null;
+  role:            string;
+  status:          MemberDayStatus;
+  leaveType:       string | null;
+}
+
+export interface CalendarDay {
+  date:        string;        // "yyyy-MM-dd"
+  weekday:     string;        // "Mon", "Tue" …
+  isWeekend:   boolean;
+  isHoliday:   boolean;
+  holidayName: string | null;
+  isToday:     boolean;
+  members:     CalendarMemberDay[];
+}
+
+export interface TeamCalendarResponse {
+  month: number;
+  year:  number;
+  label: string;              // "June 2025"
+  days:  CalendarDay[];
+}
 
 
