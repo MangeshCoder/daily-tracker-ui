@@ -193,7 +193,32 @@ export const kudosApi = {
   give: (d: object) => api.post('/kudos', d),
   getRecent: (limit = 20) => api.get(`/kudos/recent?limit=${limit}`),
   getMySummary: () => api.get('/kudos/my'),
-  getUserSummary: (userId: number) => api.get(`/kudos/user/${userId}`),
+  getLeaderboard: (period: 'week' | 'month' | 'alltime') => {
+      const now   = new Date();
+      const year  = now.getFullYear();
+      const month = now.getMonth() + 1; // 1-based
+
+      if (period === 'week') {
+        // Backend doesn't have a week mode — use current month as closest proxy
+        return api.get(`/kudos/leaderboard?year=${year}&month=${month}`);
+      }
+      if (period === 'month') {
+        return api.get(`/kudos/leaderboard?year=${year}&month=${month}`);
+      }
+      // alltime → full year (omit month)
+      return api.get(`/kudos/leaderboard?year=${year}`);
+    },
+};
+
+// ─── Announcements (Feature 10) ───────────────────────────────────────────────
+export const announcementsApi = {
+  getAll:        ()                      => api.get('/announcements'),
+  getUnreadCount:()                      => api.get('/announcements/unread-count'),
+  create:        (d: object)             => api.post('/announcements', d),
+  markRead:      (id: number)            => api.post(`/announcements/${id}/read`),
+  markAllRead:   ()                      => api.post('/announcements/read-all'),
+  togglePin:     (id: number)            => api.patch(`/announcements/${id}/pin`),
+  delete:        (id: number)            => api.delete(`/announcements/${id}`),
 };
 
 // ─── Presence (Feature 9) ─────────────────────────────────────────────────────
@@ -337,6 +362,39 @@ export const wfhApi = {
     api.post('/wfh-requests/review', null, {
       params: { token, status }
     }).then(r => r.data),     
+};
+
+export const profileApi = {
+  // Own profile
+  getMe:       ()              => api.get('/profile/me'),
+  updateMe:    (d: object)     => api.put('/profile/me', d),        // PUT → UpdateProfileDto
+  deletePhoto: ()              => api.delete('/profile/me/photo'),
+
+  // Photo upload — multipart/form-data
+  uploadPhoto: (file: File) => {
+    const fd = new FormData();
+    fd.append('photo', file);
+    return api.post('/profile/me/photo', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  // Directory — client-side filtering is used in the page,
+  // but params are kept here in case you want server-side later
+  getDirectory: (params?: { search?: string; role?: string; department?: string }) =>
+    api.get('/profile/directory', { params }),
+
+  // Single employee
+  getUser: (userId: number) => api.get(`/profile/${userId}`),
+
+  // Manager: edit dept/designation/joindate/manager of any employee
+  adminUpdate: (userId: number, d: object) => api.put(`/profile/${userId}/admin`, d),
+};
+
+
+export const teamCalendarApi = {
+  get: (month: number, year: number) =>
+    api.get('/team-calendar', { params: { month, year } }),
 };
 
 export const chatApi = {

@@ -48,7 +48,7 @@ export const SignalRProvider = ({ children }: { children: ReactNode }) => {
 
         // Register common events
         ['ReceiveNotification', 'UserOnline', 'UserOffline', 'PresenceUpdated',
-          'UserActivity', 'LeaveApplied'].forEach(event => {
+          'UserActivity', 'LeaveApplied','NewAnnouncement'].forEach(event => {
           rawOn(event, (...args) => {
             const listeners = listenersRef.current.get(event);
             listeners?.forEach(cb => cb(...args));

@@ -49,6 +49,9 @@ const MyReportPage = lazy(() =>
 const KudosPage = lazy(() =>
   import('./pages/KudosPage').then(m => ({ default: m.KudosPage }))
 );
+const AnnouncementsPage = lazy(() =>
+  import('./pages/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage }))
+);
 // ADD this line right after the KudosPage import
 const ChatPage = lazy(() => import('./pages/Chatpage').then(m => ({ default: m.ChatPage })));
 
@@ -81,6 +84,16 @@ const RegisterPage = lazy(() =>
 );
 const ForgotPasswordPage = lazy(() =>
   import('./pages/ForgotPasswordPage').then(m => ({ default: m.default }))
+);
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage }))
+);
+const DirectoryPage = lazy(() =>
+  import('./pages/Directorypage').then(m => ({ default: m.DirectoryPage }))
+);
+
+const TeamCalendarPage = lazy(() =>
+  import('./pages/TeamCalendarPage').then(m => ({ default: m.TeamCalendarPage }))
 );
 
 
@@ -142,6 +155,30 @@ const AppRoutes = () => {
         path="/"
         element={<ProtectedRoute><Layout /></ProtectedRoute>}
       >
+        <Route
+          path="profile"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <ProfilePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="team/directory"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <DirectoryPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="team/calendar"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <TeamCalendarPage />
+            </Suspense>
+          }
+        />
         {/* EMPLOYEE ROUTES */}
         <Route
           index
@@ -212,6 +249,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<SkeletonDashboard />}>
               <KudosPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="announcements"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <AnnouncementsPage />
             </Suspense>
           }
         />
