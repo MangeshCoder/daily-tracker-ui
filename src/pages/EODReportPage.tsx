@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { eodApi } from '../services/api';
 import { CreateEODReportDto, EODReport } from '../types';
@@ -6,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+
 
 const MOODS = [
   { value: 'Great', emoji: '🚀', label: 'Great - Productive Day!' },
