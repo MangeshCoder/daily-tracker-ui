@@ -96,6 +96,22 @@ const TeamCalendarPage = lazy(() =>
   import('./pages/TeamCalendarPage').then(m => ({ default: m.TeamCalendarPage }))
 );
 
+const MeetingLogPage = lazy(() =>
+  import('./pages/MeetingLogPage').then(m => ({ default: m.MeetingLogPage }))
+);
+
+
+const PerformanceReviewPage = lazy(() =>
+  import('./pages/PerformanceReviewPage').then(m => ({ default: m.PerformanceReviewPage }))
+);
+
+const OvertimeTrackerPage = lazy(() =>
+  import('./pages/OvertimeTrackerPage').then(m => ({ default: m.OvertimeTrackerPage }))
+);
+
+const PayrollPage = lazy(() =>
+  import('./pages/PayrollPage').then(m => ({ default: m.PayrollPage }))
+);
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -179,6 +195,39 @@ const AppRoutes = () => {
             </Suspense>
           }
         />
+        <Route
+          path="meetings"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <MeetingLogPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="reviews"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <PerformanceReviewPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="overtime"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <OvertimeTrackerPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="payroll"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <PayrollPage />
+            </Suspense>
+          }
+        />
+
         {/* EMPLOYEE ROUTES */}
         <Route
           index
