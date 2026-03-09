@@ -6,6 +6,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+
 const MOODS = [
   { value: 'Great', emoji: '🚀', label: 'Great - Productive Day!' },
   { value: 'Good', emoji: '😊', label: 'Good - On Track' },
