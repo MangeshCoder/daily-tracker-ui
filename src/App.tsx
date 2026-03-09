@@ -100,6 +100,7 @@ const MeetingLogPage = lazy(() =>
   import('./pages/MeetingLogPage').then(m => ({ default: m.MeetingLogPage }))
 );
 
+
 const PerformanceReviewPage = lazy(() =>
   import('./pages/PerformanceReviewPage').then(m => ({ default: m.PerformanceReviewPage }))
 );
@@ -226,6 +227,7 @@ const AppRoutes = () => {
             </Suspense>
           }
         />
+
         {/* EMPLOYEE ROUTES */}
         <Route
           index
