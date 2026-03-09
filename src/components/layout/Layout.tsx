@@ -86,12 +86,15 @@ export const Layout = () => {
       icon: '📋',
       items: [
         { to: '/tasks', label: 'Tasks', icon: '✅' },
+        { to: '/meetings',       label: 'Meeting Log',   icon: '🤝' },
+        { to: '/reviews', label: 'Performance', icon: '🎯' },
+        { to: '/overtime',       label: 'Overtime',     icon: '⏱️' },
         { to: '/eod-reports', label: 'EOD Reports', icon: '📝' },
         { to: '/my-eod-reviews', label: 'My Reviews', icon: '📌' },
         { to: '/my-report', label: 'My Report', icon: '📥' },
         { to: '/Goals', icon: '🎯', label: 'Goals' },
         { to: '/Goal history', icon: '📈', label: 'Goal History' },
-        { to: '/support', label: 'Support', icon: '🤝' },
+        { to: '/support', label: 'Support', icon: '🤝' }
       ],
     },
     {
@@ -100,6 +103,7 @@ export const Layout = () => {
       items: [
         { to: '/leave', label: 'Leave', icon: '🗓️' },
         { to: '/request', label: 'WFH Requests', icon: '🏡' },
+        { to: '/payroll',        label: 'Payroll',       icon: '💰' },
         { to: '/team/directory', label: 'Directory',    icon: '👥' },
         { to: '/team/calendar', label: 'Team Calendar', icon: '📅' },
       ],

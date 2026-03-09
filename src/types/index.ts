@@ -412,4 +412,334 @@ export interface TeamCalendarResponse {
   days:  CalendarDay[];
 }
 
+// ─── Meeting Log (Feature 6) ──────────────────────────────────────────────────
+
+export type MeetingType   = 'StandUp' | 'Planning' | 'Review' | 'Retrospective' | 'OneOnOne' | 'Other';
+export type MeetingStatus = 'Scheduled' | 'InProgress' | 'Completed' | 'Cancelled';
+export type RsvpResponse  = 'Pending' | 'Accepted' | 'Declined' | 'Maybe';
+export type ActionStatus  = 'Open' | 'InProgress' | 'Done';
+
+export interface MeetingAttendeeDto {
+  userId:          number;
+  fullName:        string;
+  profilePhotoUrl: string | null;
+  role:            string;
+  response:        RsvpResponse;
+  attended:        boolean;
+}
+
+export interface MeetingActionItemDto {
+  id:                  number;
+  description:         string;
+  assignedToUserId:    number | null;
+  assignedToUserName:  string | null;
+  status:              ActionStatus;
+  dueDate:             string | null;
+  createdAt:           string;
+}
+
+export interface MeetingDto {
+  id:                number;
+  title:             string;
+  agenda:            string | null;
+  notes:             string | null;
+  location:          string | null;
+  meetingType:       MeetingType;
+  scheduledAt:       string;
+  durationMinutes:   number;
+  status:            MeetingStatus;
+  isRecurring:       boolean;
+  recurrencePattern: string | null;
+  organisedByUserId: number;
+  organisedByName:   string;
+  createdAt:         string;
+  myResponse:        RsvpResponse | null;
+  isOrganiser:       boolean;
+  attendees:         MeetingAttendeeDto[];
+  actionItems:       MeetingActionItemDto[];
+}
+
+export interface CreateMeetingDto {
+  title:             string;
+  agenda?:           string;
+  location?:         string;
+  meetingType:       MeetingType;
+  scheduledAt:       string;
+  durationMinutes:   number;
+  isRecurring:       boolean;
+  recurrencePattern?: string;
+  attendeeIds:       number[];
+}
+
+export interface UpdateMeetingDto {
+  title?:            string;
+  agenda?:           string;
+  notes?:            string;
+  location?:         string;
+  meetingType?:      MeetingType;
+  scheduledAt?:      string;
+  durationMinutes?:  number;
+  status?:           MeetingStatus;
+}
+
+export interface CreateActionItemDto {
+  description:       string;
+  assignedToUserId?: number;
+  dueDate?:          string;
+}
+
+export interface UpdateActionItemDto {
+  description?:      string;
+  assignedToUserId?: number;
+  status?:           ActionStatus;
+  dueDate?:          string;
+}
+
+// ─── Performance Review (Feature 7) ──────────────────────────────────────────
+
+export type CycleType     = 'Quarterly' | 'HalfYearly' | 'Annual' | 'Custom';
+export type CycleStatus   = 'Active' | 'Closed';
+export type ReviewStatus  = 'Pending' | 'SelfAssessment' | 'ManagerReview' | 'Completed';
+
+export type Competency =
+  | 'TechnicalSkills' | 'Communication' | 'Teamwork'
+  | 'ProblemSolving'  | 'DeliveryQuality' | 'Initiative';
+
+export const COMPETENCIES: { key: Competency; label: string; icon: string }[] = [
+  { key: 'TechnicalSkills',  label: 'Technical Skills',   icon: '💻' },
+  { key: 'Communication',    label: 'Communication',       icon: '💬' },
+  { key: 'Teamwork',         label: 'Teamwork',            icon: '🤝' },
+  { key: 'ProblemSolving',   label: 'Problem Solving',     icon: '🧩' },
+  { key: 'DeliveryQuality',  label: 'Delivery & Quality',  icon: '🎯' },
+  { key: 'Initiative',       label: 'Initiative',          icon: '🚀' },
+];
+
+export const RATING_LABELS: Record<number, string> = {
+  1: 'Needs Improvement',
+  2: 'Below Expectations',
+  3: 'Meets Expectations',
+  4: 'Exceeds Expectations',
+  5: 'Outstanding',
+};
+
+export interface ReviewRatingDto {
+  id:         number;
+  competency: Competency;
+  score:      number;
+  comment:    string | null;
+}
+
+export interface PerformanceReviewSummaryDto {
+  id:              number;
+  revieweeName:    string;
+  profilePhotoUrl: string | null;
+  reviewerName:    string;
+  status:          ReviewStatus;
+  selfRating:      number | null;
+  overallRating:   number | null;
+}
+
+export interface ReviewCycleDto {
+  id:                    number;
+  title:                 string;
+  description:           string | null;
+  cycleType:             CycleType;
+  startDate:             string;
+  endDate:               string;
+  selfAssessmentDueDate: string | null;
+  status:                CycleStatus;
+  createdByName:         string;
+  createdAt:             string;
+  totalReviews:          number;
+  pendingCount:          number;
+  selfSubmittedCount:    number;
+  completedCount:        number;
+  myReview:              PerformanceReviewSummaryDto | null;
+}
+
+export interface PerformanceReviewDto {
+  id:                  number;
+  reviewCycleId:       number;
+  cycleTitle:          string;
+  cycleType:           string;
+  cycleStart:          string;
+  cycleEnd:            string;
+  revieweeId:          number;
+  revieweeName:        string;
+  revieweePhoto:       string | null;
+  revieweeRole:        string;
+  reviewerId:          number;
+  reviewerName:        string;
+  selfAssessmentText:  string | null;
+  selfRating:          number | null;
+  achievements:        string | null;
+  improvements:        string | null;
+  goals:               string | null;
+  selfSubmittedAt:     string | null;
+  managerFeedback:     string | null;
+  overallRating:       number | null;
+  strengthsNote:       string | null;
+  developmentNote:     string | null;
+  managerSubmittedAt:  string | null;
+  ratings:             ReviewRatingDto[];
+  status:              ReviewStatus;
+  createdAt:           string;
+  updatedAt:           string;
+}
+
+export interface SubmitSelfAssessmentDto {
+  selfAssessmentText: string;
+  selfRating:         number;
+  achievements?:      string;
+  improvements?:      string;
+  goals?:             string;
+}
+
+export interface SubmitManagerReviewDto {
+  managerFeedback: string;
+  overallRating:   number;
+  strengthsNote?:  string;
+  developmentNote?: string;
+  ratings: { competency: string; score: number; comment?: string }[];
+}
+
+export interface CreateReviewCycleDto {
+  title:                 string;
+  description?:          string;
+  cycleType:             CycleType;
+  startDate:             string;
+  endDate:               string;
+  selfAssessmentDueDate?: string;
+  revieweeIds:           number[];
+}
+
+// ─── Feature 8: Overtime Tracker ─────────────────────────────────────────────
+
+export interface OvertimeDayDto {
+  date:            string;
+  dateLabel:       string;    // "Mon, Jan 15"
+  dayStatus:       string;    // "Present" | "WFH" | "HalfDay"
+  workMinutes:     number;
+  standardMinutes: number;
+  overtimeMinutes: number;
+  workHours:       string;    // "9h 30m"
+  overtimeHours:   string;    // "1h 30m"
+  hasOvertime:     boolean;
+}
+
+export interface OvertimeWeekDto {
+  weekNumber:           number;
+  weekLabel:            string;   // "Week 1 (Jan 1–7)"
+  totalOvertimeMinutes: number;
+  totalOvertimeHours:   string;
+  daysWithOvertime:     number;
+}
+
+export interface OvertimeSummaryDto {
+  userId:    number;
+  fullName:  string;
+  role:      string;
+  month:     number;
+  year:      number;
+  totalOvertimeMinutes:      number;
+  totalOvertimeHours:        string;
+  daysWithOvertime:          number;
+  totalWorkingDays:          number;
+  avgOvertimePerDayMinutes:  number;
+  avgOvertimePerDayHours:    string;
+  peakOvertimeDate:          string | null;
+  peakOvertimeMinutes:       number;
+  peakOvertimeHours:         string;
+  standardMinutesPerDay:     number;
+  days:  OvertimeDayDto[];
+  weeks: OvertimeWeekDto[];
+}
+
+export interface TeamOvertimeDto {
+  month:      number;
+  year:       number;
+  monthLabel: string;
+  teamTotalOvertimeMinutes: number;
+  teamTotalOvertimeHours:   string;
+  teamMembersWithOvertime:  number;
+  members: OvertimeSummaryDto[];
+}
+
+// ─── Payroll Summary ──────────────────────────────────────────────────────────
+
+export interface SetSalaryDto {
+  monthlySalary:      number;
+  currency:           string;
+  overtimeMultiplier: number;
+}
+
+export interface EmployeeSalaryDto {
+  userId:             number;
+  fullName:           string;
+  role:               string;
+  monthlySalary:      number;
+  currency:           string;
+  overtimeMultiplier: number;
+  effectiveFrom:      string;
+  setByName:          string;
+  updatedAt:          string;
+}
+
+export interface PayslipEarningDto {
+  label:  string;
+  amount: number;
+  note:   string;
+}
+
+export interface PayslipDeductionDto {
+  label:  string;
+  amount: number;
+  note:   string;
+}
+
+export interface PayslipDto {
+  userId:             number;
+  fullName:           string;
+  role:               string;
+  email:              string;
+  month:              number;
+  year:               number;
+  monthLabel:         string;
+  monthlySalary:      number;
+  currency:           string;
+  overtimeMultiplier: number;
+  salaryConfigured:   boolean;
+  workingDaysInMonth: number;
+  perDayRate:         number;
+  hourlyRate:         number;
+  daysPresent:        number;
+  daysHalfDay:        number;
+  daysPaidLeave:      number;
+  daysUnpaidLeave:    number;
+  daysAbsent:         number;
+  overtimeMinutes:    number;
+  overtimeHours:      string;
+  basicEarnings:      number;
+  overtimePay:        number;
+  grossEarnings:      number;
+  unpaidLeaveDeduction: number;
+  absentDeduction:    number;
+  totalDeductions:    number;
+  netPay:             number;
+  earnings:           PayslipEarningDto[];
+  deductions:         PayslipDeductionDto[];
+}
+
+export interface TeamPayrollDto {
+  month:                number;
+  year:                 number;
+  monthLabel:           string;
+  teamTotalGross:       number;
+  teamTotalNet:         number;
+  teamTotalDeductions:  number;
+  teamTotalOvertimePay: number;
+  membersConfigured:    number;
+  membersNotConfigured: number;
+  members:              PayslipDto[];
+}
 
