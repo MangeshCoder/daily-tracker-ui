@@ -49,6 +49,9 @@ const MyReportPage = lazy(() =>
 const KudosPage = lazy(() =>
   import('./pages/KudosPage').then(m => ({ default: m.KudosPage }))
 );
+const AnnouncementsPage = lazy(() =>
+  import('./pages/AnnouncementsPage').then(m => ({ default: m.AnnouncementsPage }))
+);
 // ADD this line right after the KudosPage import
 const ChatPage = lazy(() => import('./pages/Chatpage').then(m => ({ default: m.ChatPage })));
 
@@ -82,7 +85,32 @@ const RegisterPage = lazy(() =>
 const ForgotPasswordPage = lazy(() =>
   import('./pages/ForgotPasswordPage').then(m => ({ default: m.default }))
 );
+const ProfilePage = lazy(() =>
+  import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage }))
+);
+const DirectoryPage = lazy(() =>
+  import('./pages/Directorypage').then(m => ({ default: m.DirectoryPage }))
+);
 
+const TeamCalendarPage = lazy(() =>
+  import('./pages/TeamCalendarPage').then(m => ({ default: m.TeamCalendarPage }))
+);
+
+const MeetingLogPage = lazy(() =>
+  import('./pages/MeetingLogPage').then(m => ({ default: m.MeetingLogPage }))
+);
+
+const PerformanceReviewPage = lazy(() =>
+  import('./pages/PerformanceReviewPage').then(m => ({ default: m.PerformanceReviewPage }))
+);
+
+const OvertimeTrackerPage = lazy(() =>
+  import('./pages/OvertimeTrackerPage').then(m => ({ default: m.OvertimeTrackerPage }))
+);
+
+const PayrollPage = lazy(() =>
+  import('./pages/PayrollPage').then(m => ({ default: m.PayrollPage }))
+);
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -142,6 +170,62 @@ const AppRoutes = () => {
         path="/"
         element={<ProtectedRoute><Layout /></ProtectedRoute>}
       >
+        <Route
+          path="profile"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <ProfilePage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="team/directory"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <DirectoryPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="team/calendar"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <TeamCalendarPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="meetings"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <MeetingLogPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="reviews"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <PerformanceReviewPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="overtime"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <OvertimeTrackerPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="payroll"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <PayrollPage />
+            </Suspense>
+          }
+        />
         {/* EMPLOYEE ROUTES */}
         <Route
           index
@@ -212,6 +296,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<SkeletonDashboard />}>
               <KudosPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="announcements"
+          element={
+            <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+              <AnnouncementsPage />
             </Suspense>
           }
         />

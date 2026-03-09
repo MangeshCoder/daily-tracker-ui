@@ -4,6 +4,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { NotificationBell } from '../../pages/Dashboardwidgets';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import { SkeletonDashboard } from '../Skeleton';
+import { announcementsApi } from '../../services/api';
+import { useQuery } from '@tanstack/react-query';
 export const Layout = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
@@ -23,6 +25,13 @@ export const Layout = () => {
         : [...prev, title]
     );
   };
+
+  const { data: unreadData } = useQuery({
+    queryKey: ['announcementUnread'],
+    queryFn:  () => announcementsApi.getUnreadCount().then((r) => r.data),
+    refetchInterval: 60_000,   // poll every 60s as a fallback
+  });
+  const announcementUnread: number = unreadData?.count ?? 0;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,6 +77,8 @@ export const Layout = () => {
         { to: '/history', label: 'History', icon: '📅' },
         { to: '/chat', icon: '💬', label: 'Messages' },
         { to: '/kudos', label: 'Kudos', icon: '🏆' },
+        { to: '/announcements', label: 'Announcements', icon: '📢', badge: announcementUnread },
+        { to: '/profile', label: 'My Profile', icon: '👤' }, 
       ],
     },
     {
@@ -75,12 +86,15 @@ export const Layout = () => {
       icon: '📋',
       items: [
         { to: '/tasks', label: 'Tasks', icon: '✅' },
+        { to: '/meetings',       label: 'Meeting Log',   icon: '🤝' },
+        { to: '/reviews', label: 'Performance', icon: '🎯' },
+        { to: '/overtime',       label: 'Overtime',     icon: '⏱️' },
         { to: '/eod-reports', label: 'EOD Reports', icon: '📝' },
         { to: '/my-eod-reviews', label: 'My Reviews', icon: '📌' },
         { to: '/my-report', label: 'My Report', icon: '📥' },
         { to: '/Goals', icon: '🎯', label: 'Goals' },
         { to: '/Goal history', icon: '📈', label: 'Goal History' },
-        { to: '/support', label: 'Support', icon: '🤝' },
+        { to: '/support', label: 'Support', icon: '🤝' }
       ],
     },
     {
@@ -89,6 +103,9 @@ export const Layout = () => {
       items: [
         { to: '/leave', label: 'Leave', icon: '🗓️' },
         { to: '/request', label: 'WFH Requests', icon: '🏡' },
+        { to: '/payroll',        label: 'Payroll',       icon: '💰' },
+        { to: '/team/directory', label: 'Directory',    icon: '👥' },
+        { to: '/team/calendar', label: 'Team Calendar', icon: '📅' },
       ],
     },
     {
@@ -233,6 +250,12 @@ export const Layout = () => {
                       >
                         <span>{item.icon}</span>
                         {item.label}
+                        {/* ↓ ADD THIS */}
+                          {'badge' in item && (item as any).badge > 0 && (
+                            <span className="ml-auto bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                              {(item as any).badge > 99 ? '99+' : (item as any).badge}
+                            </span>
+                          )}
                       </NavLink>
                     ))}
                   </div>
@@ -256,6 +279,12 @@ export const Layout = () => {
                       >
                         <span>{item.icon}</span>
                         {item.label}
+                          {/* ↓ ADD THIS */}
+                          {'badge' in item && (item as any).badge > 0 && (
+                            <span className="ml-auto bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+                              {(item as any).badge > 99 ? '99+' : (item as any).badge}
+                            </span>
+                          )}
                       </NavLink>
                     ))}
                   </div>

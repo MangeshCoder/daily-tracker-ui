@@ -193,7 +193,32 @@ export const kudosApi = {
   give: (d: object) => api.post('/kudos', d),
   getRecent: (limit = 20) => api.get(`/kudos/recent?limit=${limit}`),
   getMySummary: () => api.get('/kudos/my'),
-  getUserSummary: (userId: number) => api.get(`/kudos/user/${userId}`),
+  getLeaderboard: (period: 'week' | 'month' | 'alltime') => {
+      const now   = new Date();
+      const year  = now.getFullYear();
+      const month = now.getMonth() + 1; // 1-based
+
+      if (period === 'week') {
+        // Backend doesn't have a week mode — use current month as closest proxy
+        return api.get(`/kudos/leaderboard?year=${year}&month=${month}`);
+      }
+      if (period === 'month') {
+        return api.get(`/kudos/leaderboard?year=${year}&month=${month}`);
+      }
+      // alltime → full year (omit month)
+      return api.get(`/kudos/leaderboard?year=${year}`);
+    },
+};
+
+// ─── Announcements (Feature 10) ───────────────────────────────────────────────
+export const announcementsApi = {
+  getAll:        ()                      => api.get('/announcements'),
+  getUnreadCount:()                      => api.get('/announcements/unread-count'),
+  create:        (d: object)             => api.post('/announcements', d),
+  markRead:      (id: number)            => api.post(`/announcements/${id}/read`),
+  markAllRead:   ()                      => api.post('/announcements/read-all'),
+  togglePin:     (id: number)            => api.patch(`/announcements/${id}/pin`),
+  delete:        (id: number)            => api.delete(`/announcements/${id}`),
 };
 
 // ─── Presence (Feature 9) ─────────────────────────────────────────────────────
@@ -339,6 +364,39 @@ export const wfhApi = {
     }).then(r => r.data),     
 };
 
+export const profileApi = {
+  // Own profile
+  getMe:       ()              => api.get('/profile/me'),
+  updateMe:    (d: object)     => api.put('/profile/me', d),        // PUT → UpdateProfileDto
+  deletePhoto: ()              => api.delete('/profile/me/photo'),
+
+  // Photo upload — multipart/form-data
+  uploadPhoto: (file: File) => {
+    const fd = new FormData();
+    fd.append('photo', file);
+    return api.post('/profile/me/photo', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  // Directory — client-side filtering is used in the page,
+  // but params are kept here in case you want server-side later
+  getDirectory: (params?: { search?: string; role?: string; department?: string }) =>
+    api.get('/profile/directory', { params }),
+
+  // Single employee
+  getUser: (userId: number) => api.get(`/profile/${userId}`),
+
+  // Manager: edit dept/designation/joindate/manager of any employee
+  adminUpdate: (userId: number, d: object) => api.put(`/profile/${userId}/admin`, d),
+};
+
+
+export const teamCalendarApi = {
+  get: (month: number, year: number) =>
+    api.get('/team-calendar', { params: { month, year } }),
+};
+
 export const chatApi = {
   // Conversations
   getConversations: (): Promise<ConversationSummary[]> =>
@@ -409,6 +467,81 @@ export const chatApi = {
     api.post(`/chat/conversations/${convId}/members/${targetUserId}/promote`),
 };
 
+// ─── Meeting Log (Feature 6) ──────────────────────────────────────────────────
+export const meetingApi = {
+  // Meetings
+  getAll:   (month?: number, year?: number) =>
+    api.get('/meetings', { params: month && year ? { month, year } : {} }),
+  getById:  (id: number) =>
+    api.get(`/meetings/${id}`),
+  create:   (d: object) =>
+    api.post('/meetings', d),
+  update:   (id: number, d: object) =>
+    api.put(`/meetings/${id}`, d),
+  delete:   (id: number) =>
+    api.delete(`/meetings/${id}`),
+  rsvp:     (id: number, response: string) =>
+    api.post(`/meetings/${id}/rsvp`, { response }),
 
+  // Action items
+  addActionItem:    (meetingId: number, d: object) =>
+    api.post(`/meetings/${meetingId}/action-items`, d),
+  updateActionItem: (itemId: number, d: object) =>
+    api.put(`/meetings/action-items/${itemId}`, d),
+  deleteActionItem: (itemId: number) =>
+    api.delete(`/meetings/action-items/${itemId}`),
+};
+
+// ─── Performance Review (Feature 7) ──────────────────────────────────────────
+export const reviewApi = {
+  // Shared
+  getCycles:  ()           => api.get('/reviews/cycles'),
+  getCycle:   (id: number) => api.get(`/reviews/cycles/${id}`),
+  getMyReviews: ()         => api.get('/reviews/my'),
+  getReview:  (id: number) => api.get(`/reviews/${id}`),
+  submitSelfAssessment: (id: number, d: object) =>
+    api.put(`/reviews/${id}/self-assessment`, d),
+
+  // Manager only
+  createCycle:  (d: object)                    => api.post('/reviews/cycles', d),
+  closeCycle:   (id: number)                   => api.put(`/reviews/cycles/${id}/close`, {}),
+  getTeamReviews: (cycleId?: number)           =>
+    api.get('/reviews/team', { params: cycleId ? { cycleId } : {} }),
+  submitManagerReview: (id: number, d: object) =>
+    api.put(`/reviews/${id}/manager-review`, d),
+};
+
+// ─── Feature 8: Overtime Tracker ─────────────────────────────────────────────
+export const overtimeApi = {
+  /** Employee: own monthly overtime summary */
+  getMy: (month?: number, year?: number) =>
+    api.get('/overtime/my', { params: { month, year } }),
+
+  /** Manager/TeamLead: all team members' overtime for a month */
+  getTeam: (month?: number, year?: number) =>
+    api.get('/overtime/team', { params: { month, year } }),
+};
+
+// ─── Payroll Summary ──────────────────────────────────────────────────────────
+export const payrollApi = {
+  // Employee
+  getMyPayslip:  (month?: number, year?: number) =>
+    api.get('/payroll/my', { params: { month, year } }),
+  getMySalary:   () =>
+    api.get('/payroll/salary/my'),
+
+  // Manager / TeamLead
+  getTeamPayroll: (month?: number, year?: number) =>
+    api.get('/payroll/team', { params: { month, year } }),
+  getTeamSalaries: () =>
+    api.get('/payroll/salary/team'),
+  setSalary: (userId: number, data: object) =>
+    api.put(`/payroll/salary/${userId}`, data),
+  downloadPayslip: (month?: number, year?: number) =>
+    api.get('/payroll/my/download', {
+      params:       { month, year },
+      responseType: 'blob',   // ← REQUIRED so axios treats response as binary
+    }),
+};
 
 export default api;

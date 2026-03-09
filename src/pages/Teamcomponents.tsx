@@ -326,7 +326,9 @@ export const TeamPresencePanel = () => {
                 Available
               </span>
             )}
-            {!member.isCheckedInToday && (
+            {/* Only show Offline label when their actual presence status is Offline,
+                not just because they haven't checked in via DailyLog */}
+            {!member.isAvailableForHelp && member.status === 'Offline' && (
               <span className="text-xs text-slate-600">Offline</span>
             )}
           </div>
