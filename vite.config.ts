@@ -23,9 +23,9 @@ export default defineConfig({
       },
       workbox: {
         // Cache API responses for offline use
-        runtimeCaching: [
+        runtimeCaching: [ 
           {
-            urlPattern: /^https?:\/\/localhost:5000\/api\/(dashboard|dailylog\/today|tasks\/today)/,
+            urlPattern: /^https?:\/\/localhost:7096\/api\/(dashboard|dailylog\/today|tasks\/today)/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

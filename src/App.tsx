@@ -112,6 +112,25 @@ const PayrollPage = lazy(() =>
   import('./pages/PayrollPage').then(m => ({ default: m.PayrollPage }))
 );
 
+const DocumentManagementPage = lazy(() =>
+  import('./pages/DocumentManagementPage').then(m => ({ default: m.DocumentManagementPage }))
+);
+
+const TrainingCertificationPage = lazy(() =>
+  import('./pages/TrainingCertificationPage').then(m => ({ default: m.TrainingCertificationPage }))
+);
+
+const WFHSummaryPage = lazy(() =>
+  import('./pages/WFHSummaryPage').then(m => ({ default: m.WFHSummaryPage }))
+);
+
+const ResignationPage = lazy(() =>
+  import('./pages/ResignationPage').then(m => ({ default: m.ResignationPage }))
+);
+
+const NotificationsPage = lazy(() =>
+  import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage }))
+);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ROUTE GUARDS
@@ -125,7 +144,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const ManagerRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (user?.role !== 'Manager') return <Navigate to="/" replace />;
+  if (user?.role !== 'Manager' && user?.role !== 'TeamLead') return <Navigate to="/" replace />;
   return <>{children}</>;
 };
 
@@ -226,6 +245,46 @@ const AppRoutes = () => {
             </Suspense>
           }
         />
+        <Route
+          path="documents"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <DocumentManagementPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="training"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <TrainingCertificationPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="wfh-summary"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <WFHSummaryPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="resignation"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <ResignationPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="notifications"
+          element={
+            <Suspense fallback={<SkeletonDashboard />}>
+              <NotificationsPage />
+            </Suspense>
+          }
+        />
         {/* EMPLOYEE ROUTES */}
         <Route
           index
@@ -260,7 +319,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="Goal history"
+          path="goal-history"
           element={
             <Suspense fallback={<SkeletonDashboard />}>
               <GoalHistoryPage />

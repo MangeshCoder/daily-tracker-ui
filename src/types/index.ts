@@ -743,3 +743,238 @@ export interface TeamPayrollDto {
   members:              PayslipDto[];
 }
 
+// ─── Document Management ──────────────────────────────────────────────────────
+
+export type DocumentCategory =
+  | 'OfferLetter'
+  | 'Contract'
+  | 'Payslip'
+  | 'IDProof'
+  | 'Certificate'
+  | 'Policy'
+  | 'Appraisal'
+  | 'Warning'
+  | 'Other';
+
+export interface DocumentDto {
+  id:                  number;
+  title:               string;
+  description?:        string;
+  category:            string;
+  fileName:            string;
+  mimeType:            string;
+  fileSizeBytes:       number;
+  fileSizeLabel:       string;
+  isPublic:            boolean;
+  uploadedAt:          string;
+  expiresAt?:          string;
+  isExpired:           boolean;
+  expiresWithin30Days: boolean;
+  ownerUserId:         number;
+  ownerName:           string;
+  uploadedByUserId:    number;
+  uploadedByName:      string;
+  downloadUrl:         string;
+}
+
+export interface DocumentSummaryDto {
+  totalDocuments:    number;
+  myDocuments:       number;
+  publicDocuments:   number;
+  expiringDocuments: number;
+  expiredDocuments:  number;
+  byCategory:        Record<string, number>;
+}
+
+export interface UploadDocumentDto {
+  title:        string;
+  description?: string;
+  category:     string;
+  ownerUserId:  number;
+  isPublic:     boolean;
+  expiresAt?:   string;
+}
+
+export interface UpdateDocumentDto {
+  title?:       string;
+  description?: string;
+  category?:    string;
+  isPublic?:    boolean;
+  expiresAt?:   string;
+}
+
+// ─── Training & Certification Tracker ────────────────────────────────────────
+
+export type TrainingStatus = 'Planned' | 'InProgress' | 'Completed' | 'Cancelled';
+export type TrainingType   = 'Online' | 'Internal' | 'External' | 'Conference' | 'Workshop' | 'Certification';
+export type CertStatus     = 'Active' | 'Expired' | 'Revoked';
+
+export interface TrainingDto {
+  id:            number;
+  userId:        number;
+  userName:      string;
+  title:         string;
+  provider?:     string;
+  trainingType:  string;
+  description?:  string;
+  startDate:     string;
+  endDate?:      string;
+  durationHours: number;
+  status:        string;
+  notes?:        string;
+  courseUrl?:    string;
+  createdAt:     string;
+}
+
+export interface CertificationDto {
+  id:                  number;
+  userId:              number;
+  userName:            string;
+  name:                string;
+  issuingOrganization: string;
+  issueDate:           string;
+  expiryDate?:         string;
+  credentialId?:       string;
+  credentialUrl?:      string;
+  status:              string;
+  hasFile:             boolean;
+  fileName?:           string;
+  fileSizeLabel?:      string;
+  downloadUrl?:        string;
+  isExpired:           boolean;
+  expiresWithin30Days: boolean;
+  daysUntilExpiry?:    number;
+  createdAt:           string;
+}
+
+export interface TrainingStatsDto {
+  totalTrainings:        number;
+  completedTrainings:    number;
+  plannedTrainings:      number;
+  inProgressTrainings:   number;
+  totalHours:            number;
+  totalCertifications:   number;
+  activeCertifications:  number;
+  expiredCertifications: number;
+  expiringWithin30Days:  number;
+  byTrainingType:        Record<string, number>;
+}
+
+export interface TeamTrainingStatsDto {
+  totalMembers:       number;
+  totalTrainings:     number;
+  totalCertifications: number;
+  expiringCerts:      number;
+  totalHours:         number;
+  members:            MemberTrainingSummaryDto[];
+}
+
+export interface MemberTrainingSummaryDto {
+  userId:            number;
+  fullName:          string;
+  role:              string;
+  trainingCount:     number;
+  completedCount:    number;
+  hoursCompleted:    number;
+  certificationCount: number;
+  expiringCertCount: number;
+}
+
+export interface CreateTrainingDto {
+  title:         string;
+  provider?:     string;
+  trainingType:  string;
+  description?:  string;
+  startDate:     string;
+  endDate?:      string;
+  durationHours: number;
+  status:        string;
+  notes?:        string;
+  courseUrl?:    string;
+}
+
+export interface UpdateTrainingDto {
+  title?:         string;
+  provider?:      string;
+  trainingType?:  string;
+  description?:   string;
+  startDate?:     string;
+  endDate?:       string;
+  durationHours?: number;
+  status?:        string;
+  notes?:         string;
+  courseUrl?:     string;
+}
+
+export interface CreateCertificationDto {
+  name:                string;
+  issuingOrganization: string;
+  issueDate:           string;
+  expiryDate?:         string;
+  credentialId?:       string;
+  credentialUrl?:      string;
+}
+
+export interface UpdateCertificationDto {
+  name?:                string;
+  issuingOrganization?: string;
+  issueDate?:           string;
+  expiryDate?:          string;
+  credentialId?:        string;
+  credentialUrl?:       string;
+  status?:              string;
+}
+
+// ─── Resignation & Exit Management ───────────────────────────────────────────
+
+export interface ExitChecklistItemDto {
+  id:               number;
+  task:             string;
+  isCompleted:      boolean;
+  completedAt?:     string;
+  completedByName?: string;
+}
+
+export interface ResignationDto {
+  id:                   number;
+  userId:               number;
+  employeeName:         string;
+  department?:          string;
+  designation?:         string;
+  reason:               string;
+  requestedLastDay:     string;
+  status:               'Pending' | 'Accepted' | 'Rejected' | 'Completed';
+  reviewNote?:          string;
+  reviewedByName?:      string;
+  reviewedAt?:          string;
+  noticePeriodEndDate?: string;
+  exitDate?:            string;
+  submittedAt:          string;
+  noticeDaysRemaining?: number;
+  isMyResignation:      boolean;
+  checklistItems:       ExitChecklistItemDto[];
+}
+
+export interface ResignationSummaryDto {
+  pendingCount:   number;
+  acceptedCount:  number;
+  completedCount: number;
+  rejectedCount:  number;
+  active:         ResignationDto[];
+}
+
+export interface SubmitResignationDto {
+  reason:           string;
+  requestedLastDay: string;
+}
+
+export interface ReviewResignationDto {
+  decision:            'Accepted' | 'Rejected';
+  reviewNote?:         string;
+  noticePeriodEndDate?: string;
+}
+
+export interface CompleteExitDto {
+  exitDate:   string;
+  finalNote?: string;
+}

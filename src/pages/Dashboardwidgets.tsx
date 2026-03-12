@@ -4,7 +4,7 @@ import { goalsApi, notifApi } from '../services/api';
 import { AppNotification, GoalProgress } from '../types';
 import { useToast } from '../context/ToastContext';
 import { useSignalR } from '../context/SignalRContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Feature 4: Goals & Productivity Score Widget
@@ -278,6 +278,8 @@ useEffect(() => {
   const typeIcons: Record<string, string> = {
     Success: '✅', Warning: '⚠️', Info: 'ℹ️', Reminder: '🔔'
   };
+  
+  const navigate = useNavigate();
 
   return (
     <div ref={popupRef} className="relative">
@@ -296,11 +298,21 @@ useEffect(() => {
 
       {open && (
         <div className="fixed right-4 top-4 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-[9999] overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-slate-800">
-            <h4 className="text-sm font-semibold text-white">Notifications</h4>
-            <button onClick={() => markAll.mutate()}
-              className="text-xs text-blue-400 hover:text-blue-300 transition">
-              Mark all read
+          <div className="border-b border-slate-800">
+            <div className="flex items-center justify-between px-4 pt-4 pb-3">
+              <h4 className="text-sm font-semibold text-white">Notifications</h4>
+              <button onClick={() => markAll.mutate()}
+                className="text-xs text-blue-400 hover:text-blue-300 transition">
+                Mark all read
+              </button>
+            </div>
+            {/* ── NEW: View all link ───────────────────────────────────────── */}
+            <button
+              onClick={() => { setOpen(false); navigate('/notifications'); }}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white transition-colors text-xs font-medium"
+            >
+              <span>📥 Open full inbox</span>
+              <span className="text-slate-600">→</span>
             </button>
           </div>
           <div className="max-h-72 overflow-y-auto">

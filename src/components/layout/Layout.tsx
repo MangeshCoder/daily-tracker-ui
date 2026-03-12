@@ -4,7 +4,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { NotificationBell } from '../../pages/Dashboardwidgets';
 import { Suspense, useState, useRef, useEffect } from 'react';
 import { SkeletonDashboard } from '../Skeleton';
-import { announcementsApi } from '../../services/api';
+import { announcementsApi, notifApi } from '../../services/api';
 import { useQuery } from '@tanstack/react-query';
 export const Layout = () => {
   const { user, logout } = useAuth();
@@ -33,6 +33,13 @@ export const Layout = () => {
   });
   const announcementUnread: number = unreadData?.count ?? 0;
 
+  const { data: notifCountData } = useQuery({
+    queryKey: ['notifCount'],
+    queryFn:  () => notifApi.getCount().then(r => r.data.count as number),
+    refetchInterval: 30_000,
+  });
+  const notifUnread: number = notifCountData ?? 0;
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -78,6 +85,7 @@ export const Layout = () => {
         { to: '/chat', icon: '💬', label: 'Messages' },
         { to: '/kudos', label: 'Kudos', icon: '🏆' },
         { to: '/announcements', label: 'Announcements', icon: '📢', badge: announcementUnread },
+        { to: '/notifications', label: 'Notifications', icon: '🔔', badge: notifUnread },
         { to: '/profile', label: 'My Profile', icon: '👤' }, 
       ],
     },
@@ -88,12 +96,13 @@ export const Layout = () => {
         { to: '/tasks', label: 'Tasks', icon: '✅' },
         { to: '/meetings',       label: 'Meeting Log',   icon: '🤝' },
         { to: '/reviews', label: 'Performance', icon: '🎯' },
+        { to: '/training', label: 'Training & Certs', icon: '🎓' },
         { to: '/overtime',       label: 'Overtime',     icon: '⏱️' },
         { to: '/eod-reports', label: 'EOD Reports', icon: '📝' },
         { to: '/my-eod-reviews', label: 'My Reviews', icon: '📌' },
         { to: '/my-report', label: 'My Report', icon: '📥' },
         { to: '/Goals', icon: '🎯', label: 'Goals' },
-        { to: '/Goal history', icon: '📈', label: 'Goal History' },
+        { to: '/goal-history', icon: '📈', label: 'Goal History' },
         { to: '/support', label: 'Support', icon: '🤝' }
       ],
     },
@@ -103,7 +112,10 @@ export const Layout = () => {
       items: [
         { to: '/leave', label: 'Leave', icon: '🗓️' },
         { to: '/request', label: 'WFH Requests', icon: '🏡' },
+        { to: '/wfh-summary', label: 'WFH Summary', icon: '🏠' },
+        { to: '/resignation', label: 'Resignation', icon: '🚪' },
         { to: '/payroll',        label: 'Payroll',       icon: '💰' },
+        { to: '/documents', label: 'Documents', icon: '📁' },
         { to: '/team/directory', label: 'Directory',    icon: '👥' },
         { to: '/team/calendar', label: 'Team Calendar', icon: '📅' },
       ],
