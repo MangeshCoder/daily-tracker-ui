@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { eodApi } from '../services/api';
 import { CreateEODReportDto, EODReport } from '../types';
