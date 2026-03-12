@@ -1,5 +1,16 @@
 import axios from 'axios';
-import { ChatMessage, ConversationDetail, ConversationSummary, SendMessagePayload, UserChatProfile } from '../types';
+import { ChatMessage, ConversationDetail,TrainingDto, 
+   CertificationDto, TrainingStatsDto, TeamTrainingStatsDto,
+   CreateTrainingDto, UpdateTrainingDto, CreateCertificationDto, 
+   UpdateCertificationDto, ConversationSummary, DocumentDto, DocumentSummaryDto, 
+   SendMessagePayload, UpdateDocumentDto, UserChatProfile, 
+   ExitChecklistItemDto,
+   ResignationDto,
+   CompleteExitDto,
+   ReviewResignationDto,
+   ResignationSummaryDto,
+   SubmitResignationDto,
+   AppNotification} from '../types';
 import { ChatApiResponse, MessageHistory } from '../types/chat';
 
 const BASE_URL = 'https://localhost:7096/api';
@@ -248,10 +259,34 @@ export const holidayApi = {
 
 // ─── Notifications (Feature 1) ────────────────────────────────────────────────
 export const notifApi = {
-  getAll: (unreadOnly = false) => api.get(`/notifications?unreadOnly=${unreadOnly}`),
-  getCount: () => api.get('/notifications/count'),
-  markRead: (id: number) => api.put(`/notifications/${id}/read`),
-  markAllRead: () => api.put('/notifications/read-all'),
+  // ── Bell popup (existing — unchanged) ──────────────────────────────────────
+  // Returns latest 50 notifications. Fast. Used only by the bell dropdown.
+  getAll:       (unreadOnly = false) =>
+    api.get<AppNotification[]>(`/notifications?unreadOnly=${unreadOnly}`),
+
+  getCount:     () =>
+    api.get<{ count: number }>('/notifications/count'),
+
+  markRead:     (id: number) =>
+    api.put(`/notifications/${id}/read`),
+
+  markAllRead:  () =>
+    api.put('/notifications/read-all'),
+
+  // ── Inbox page (new) ───────────────────────────────────────────────────────
+  // Paginated, no 50-item cap — skip/take for infinite scroll.
+  getPaged: (skip = 0, take = 30, unreadOnly = false) =>
+    api.get<AppNotification[]>(
+      `/notifications/paged?skip=${skip}&take=${take}&unreadOnly=${unreadOnly}`
+    ),
+
+  // Delete one notification (user dismisses it permanently)
+  deleteOne: (id: number) =>
+    api.delete(`/notifications/${id}`),
+
+  // Clear all already-read notifications in one request
+  clearRead: () =>
+    api.delete<{ deleted: number; message: string }>('/notifications/clear-read'),
 };
 
 // ─── Analytics (Feature 5) ────────────────────────────────────────────────────
@@ -542,6 +577,127 @@ export const payrollApi = {
       params:       { month, year },
       responseType: 'blob',   // ← REQUIRED so axios treats response as binary
     }),
+};
+
+export const documentApi = {
+
+  // Employee — own + public docs
+  getMy: () =>
+    api.get<DocumentDto[]>('/documents/my'),
+
+  // Manager/TeamLead — all documents
+  getAll: () =>
+    api.get<DocumentDto[]>('/documents/all'),
+
+  // Manager/TeamLead — docs for a specific employee
+  getForUser: (userId: number) =>
+    api.get<DocumentDto[]>(`/documents/user/${userId}`),
+
+  // Summary stats
+  getSummary: () =>
+    api.get<DocumentSummaryDto>('/documents/summary'),
+
+  // Single document metadata
+  getOne: (id: number) =>
+    api.get<DocumentDto>(`/documents/${id}`),
+
+  // Upload — multipart/form-data
+  upload: (formData: FormData) =>
+    api.post<DocumentDto>('/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  // Update metadata
+  update: (id: number, data: UpdateDocumentDto) =>
+    api.put<DocumentDto>(`/documents/${id}`, data),
+
+  // Delete
+  delete: (id: number) =>
+    api.delete(`/documents/${id}`),
+
+  // Download — returns blob so browser can save/open
+  download: (id: number) =>
+    api.get(`/documents/${id}/download`, { responseType: 'blob' }),
+};
+
+// ─── Training & Certification Tracker ────────────────────────────────────────
+export const trainingApi = {
+
+  // ── Trainings ──────────────────────────────────────────────────────────────
+  getMyTrainings:       ()            => api.get<TrainingDto[]>('/training/my'),
+  getAllTrainings:       ()            => api.get<TrainingDto[]>('/training/all'),
+  getTrainingsForUser:  (uid: number) => api.get<TrainingDto[]>(`/training/user/${uid}`),
+  getMyStats:           ()            => api.get<TrainingStatsDto>('/training/stats'),
+  getTeamStats:         ()            => api.get<TeamTrainingStatsDto>('/training/stats/team'),
+
+  createTraining: (data: CreateTrainingDto) =>
+    api.post<TrainingDto>('/training', data),
+
+  updateTraining: (id: number, data: UpdateTrainingDto) =>
+    api.put<TrainingDto>(`/training/${id}`, data),
+
+  deleteTraining: (id: number) =>
+    api.delete(`/training/${id}`),
+
+  // ── Certifications ─────────────────────────────────────────────────────────
+  getMyCertifications:      ()            => api.get<CertificationDto[]>('/training/certifications/my'),
+  getAllCertifications:      ()            => api.get<CertificationDto[]>('/training/certifications/all'),
+  getCertificationsForUser: (uid: number) => api.get<CertificationDto[]>(`/training/certifications/user/${uid}`),
+  getExpiring:              ()            => api.get<CertificationDto[]>('/training/certifications/expiring'),
+
+  createCertification: (formData: FormData) =>
+    api.post<CertificationDto>('/training/certifications', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+
+  updateCertification: (id: number, data: UpdateCertificationDto) =>
+    api.put<CertificationDto>(`/training/certifications/${id}`, data),
+
+  deleteCertification: (id: number) =>
+    api.delete(`/training/certifications/${id}`),
+
+  downloadCert: (id: number) =>
+    api.get(`/training/certifications/${id}/download`, { responseType: 'blob' }),
+};
+
+// ─── Resignation & Exit Management ───────────────────────────────────────────
+export const resignationApi = {
+
+  // Employee
+  submit:   (data: SubmitResignationDto) =>
+    api.post<ResignationDto>('/resignation', data),
+
+  getMy:    () =>
+    api.get<ResignationDto>('/resignation/my'),
+
+  withdraw: () =>
+    api.delete('/resignation/withdraw'),
+
+  // Manager
+  getAll:   (status?: string) =>
+    api.get<ResignationDto[]>('/resignation', { params: status ? { status } : {} }),
+
+  getSummary: () =>
+    api.get<ResignationSummaryDto>('/resignation/summary'),
+
+  getById:  (id: number) =>
+    api.get<ResignationDto>(`/resignation/${id}`),
+
+  review:   (id: number, data: ReviewResignationDto) =>
+    api.put<ResignationDto>(`/resignation/${id}/review`, data),
+
+  completeExit: (id: number, data: CompleteExitDto) =>
+    api.put<ResignationDto>(`/resignation/${id}/complete`, data),
+
+  // Checklist
+  addChecklistItem:    (resignationId: number, task: string) =>
+    api.post<ExitChecklistItemDto>(`/resignation/${resignationId}/checklist`, { task }),
+
+  toggleChecklistItem: (itemId: number) =>
+    api.put<ExitChecklistItemDto>(`/resignation/checklist/${itemId}/toggle`),
+
+  deleteChecklistItem: (itemId: number) =>
+    api.delete(`/resignation/checklist/${itemId}`),
 };
 
 export default api;
