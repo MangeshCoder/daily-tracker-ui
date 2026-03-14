@@ -1,26 +1,38 @@
+// ─────────────────────────────────────────────────────────────────────────────
+//  FILE 5: frontend/src/pages/Dashboardpage.tsx
+//  ACTION: REPLACE entire file
+//
+//  Changes from original:
+//  1. useGeolocation hook imported
+//  2. locationError state added — shows error banner below buttons
+//  3. handleCheckIn:
+//     - calls geo.requestLocation() first
+//     - if withinOffice → proceed, send lat/lng with request
+//     - if outside/denied/WFH check → shows locationError banner
+//       with "Apply WFH" link if blocked due to location
+//     - catches 403 from backend → shows the exact server message
+//  4. handleCheckOut: same location logic
+//  5. All original UI (Swal confirm on checkout, breaks, stats, timeline) unchanged
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState, useEffect, useCallback } from 'react';
 import { dashboardApi, dailyLogApi, breaksApi } from '../services/api';
 import { DashboardSummary } from '../types';
 import { useAuth } from '../context/Authcontext';
 import { SupportMediaDisplay } from '../components/SupportMediaDisplay';
 import Swal from 'sweetalert2';
-import { EODReportModal, TeamPresencePanel } from './Teamcomponents'; 
+import { EODReportModal, TeamPresencePanel } from './Teamcomponents';
+import { useGeolocation } from '../context/useGeolocation';
+import { useNavigate } from 'react-router-dom';
 
 const formatISTTime = (dateString?: string) => {
-  if (!dateString) return "--:--";
-
-  // Force treat backend time as UTC
-  const utcDate = new Date(dateString + "Z");
-
-  return utcDate.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata",
+  if (!dateString) return '--:--';
+  const utcDate = new Date(dateString + 'Z');
+  return utcDate.toLocaleTimeString('en-IN', {
+    hour: '2-digit', minute: '2-digit',
+    hour12: true, timeZone: 'Asia/Kolkata',
   });
 };
-
-
 
 const StatCard = ({ label, value, sub, color }: {
   label: string; value: string | number; sub?: string; color: string;
@@ -35,13 +47,6 @@ const StatCard = ({ label, value, sub, color }: {
 const TimelineBar = ({ summary }: { summary: DashboardSummary }) => {
   const log = summary.todayLog;
   if (!log?.checkInTime) return null;
-
-  const workStart = new Date(log.checkInTime);
-  const now = new Date();
-  const totalMins = (now.getTime() - workStart.getTime()) / 60000;
-  console.log(summary?.todayLog?.checkInTime)
-
-
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mt-4">
       <h3 className="text-sm font-semibold text-slate-300 mb-4">Today's Timeline</h3>
@@ -56,20 +61,16 @@ const TimelineBar = ({ summary }: { summary: DashboardSummary }) => {
           <span className="text-xs text-white font-medium">
             {formatISTTime(log.checkInTime)}
             {' → '}
-            {log.checkOutTime
-              ? formatISTTime(log.checkOutTime)
-              : 'Now'}
+            {log.checkOutTime ? formatISTTime(log.checkOutTime) : 'Now'}
           </span>
         </div>
       </div>
       <div className="flex gap-4 mt-3 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 bg-blue-500 rounded-full" />
-          Work: {log.workHours}
+          <span className="w-2 h-2 bg-blue-500 rounded-full" /> Work: {log.workHours}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 bg-amber-500 rounded-full" />
-          Breaks: {log.totalBreakMinutes}m
+          <span className="w-2 h-2 bg-amber-500 rounded-full" /> Breaks: {log.totalBreakMinutes}m
         </span>
       </div>
     </div>
@@ -77,11 +78,15 @@ const TimelineBar = ({ summary }: { summary: DashboardSummary }) => {
 };
 
 export const DashboardPage = () => {
-  const { user } = useAuth();
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user }    = useAuth();
+  const navigate    = useNavigate();
+  const [summary, setSummary]         = useState<DashboardSummary | null>(null);
+  const [loading, setLoading]         = useState(true);
   const [actionLoading, setActionLoading] = useState('');
-  const [showEODModal, setShowEODModal] = useState(false);
+  const [showEODModal, setShowEODModal]   = useState(false);
+  const [locationError, setLocationError] = useState('');  // ← NEW
+
+  const geo = useGeolocation();  // ← NEW
 
   const load = useCallback(async () => {
     try {
@@ -96,61 +101,126 @@ export const DashboardPage = () => {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 60000); // refresh every minute
+    const interval = setInterval(load, 60000);
     return () => clearInterval(interval);
   }, [load]);
 
+  // ── Check In ──────────────────────────────────────────────────────────────
   const handleCheckIn = async () => {
+    setLocationError('');
     setActionLoading('checkin');
+
     try {
-      await dailyLogApi.checkIn({ dayStatus: 'Present' });
+      // Step 1: Get GPS coordinates
+      const coords = await geo.requestLocation();
+
+      if (!coords) {
+        // GPS failed or outside office
+        if (geo.status === 'denied') {
+          setLocationError(
+            '📍 Location permission denied. Please allow location in browser settings. ' +
+            'If you are working from home, apply for a WFH request first.'
+          );
+        } else if (geo.status === 'outside') {
+          setLocationError(
+            `📍 ${geo.errorMessage} If you are working from home, apply for a WFH request first.`
+          );
+        } else {
+          setLocationError('📍 Could not get your location. Please try again.');
+        }
+        setActionLoading('');
+        return;
+      }
+
+      // Step 2: Check in with coordinates
+      await dailyLogApi.checkIn({
+        dayStatus: 'Present',
+        latitude:  coords.latitude,
+        longitude: coords.longitude,
+      });
+
       await load();
+    } catch (err: any) {
+      // Backend 403 — location rejected server-side
+      if (err?.response?.status === 403) {
+        setLocationError(`📍 ${err.response.data?.message}`);
+      } else {
+        setLocationError('Check-in failed. Please try again.');
+      }
     } finally {
       setActionLoading('');
     }
   };
 
-const handleCheckOut = async () => {
-  // 1. Trigger the stylish popup
-  const result = await Swal.fire({
-    title: 'Ready to check out?',
-    text: "Are you sure you want to check out for today?",
-    icon: 'question', 
-    background: 'rgb(15, 23, 42)', 
-    color: '#ffffff',              
-    iconColor: '#3b82f6',          
-    showCancelButton: true,
-    confirmButtonColor: '#3b82f6', 
-    cancelButtonColor: '#94a3b8',  
-    confirmButtonText: 'Yes, check out',
-    cancelButtonText: 'Cancel',
-    customClass: {
-      popup: 'font-sans rounded-lg' 
-    }
-  });
+  // ── Check Out ─────────────────────────────────────────────────────────────
+  const handleCheckOut = async () => {
+    setLocationError('');
 
-  if (!result.isConfirmed) return;
-
-  setActionLoading('checkout');
-  try {
-    await dailyLogApi.checkOut({});
-    await load();
-    
-    Swal.fire({
-      title: 'Checked Out!',
-      text: 'Have a great rest of your day.',
-      icon: 'success',
-      background: 'rgb(15, 23, 42)', 
-      color: '#ffffff',              
-      iconColor: '#3b82f6',          
-      timer: 2000,
-      showConfirmButton: false
+    // Confirm dialog first (same as original)
+    const result = await Swal.fire({
+      title: 'Ready to check out?',
+      text:  'Are you sure you want to check out for today?',
+      icon:  'question',
+      background: 'rgb(15, 23, 42)',
+      color: '#ffffff',
+      iconColor: '#3b82f6',
+      showCancelButton:    true,
+      confirmButtonColor:  '#3b82f6',
+      cancelButtonColor:   '#94a3b8',
+      confirmButtonText:   'Yes, check out',
+      cancelButtonText:    'Cancel',
+      customClass: { popup: 'font-sans rounded-lg' }
     });
 
-  } finally {
-    setActionLoading('');
-  }
-};
+    if (!result.isConfirmed) return;
+
+    setActionLoading('checkout');
+
+    try {
+      // Step 1: Get GPS coordinates
+      const coords = await geo.requestLocation();
+
+      if (!coords) {
+        if (geo.status === 'denied') {
+          setLocationError('📍 Location permission denied. Cannot check out without location verification.');
+        } else if (geo.status === 'outside') {
+          setLocationError(`📍 ${geo.errorMessage}`);
+        } else {
+          setLocationError('📍 Could not get your location. Please try again.');
+        }
+        setActionLoading('');
+        return;
+      }
+
+      // Step 2: Check out with coordinates
+      await dailyLogApi.checkOut({
+        latitude:  coords.latitude,
+        longitude: coords.longitude,
+      });
+
+      await load();
+
+      Swal.fire({
+        title: 'Checked Out!',
+        text:  'Have a great rest of your day.',
+        icon:  'success',
+        background: 'rgb(15, 23, 42)',
+        color: '#ffffff',
+        iconColor: '#3b82f6',
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+    } catch (err: any) {
+      if (err?.response?.status === 403) {
+        setLocationError(`📍 ${err.response.data?.message}`);
+      } else {
+        setLocationError('Check-out failed. Please try again.');
+      }
+    } finally {
+      setActionLoading('');
+    }
+  };
 
   const handleBreak = async (type: string) => {
     setActionLoading(`break-${type}`);
@@ -181,12 +251,13 @@ const handleCheckOut = async () => {
     );
   }
 
-  const isCheckedIn = summary?.isCheckedIn ?? false;
+  const isCheckedIn  = summary?.isCheckedIn ?? false;
   const isCheckedOut = !!summary?.todayLog?.checkOutTime;
   const hasActiveBreak = summary?.hasActiveBreak ?? false;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -209,16 +280,49 @@ const handleCheckOut = async () => {
         </div>
       </div>
 
+      {/* ── Location Error Banner ──────────────────────────────────────────── */}
+      {locationError && (
+        <div className="mb-4 flex items-start gap-3 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+          <div className="flex-1">
+            <p className="text-red-400 text-sm">{locationError}</p>
+            {/* Show WFH link when blocked due to location */}
+            {locationError.includes('working from home') && (
+              <button
+                onClick={() => navigate('/request')}
+                className="mt-2 text-xs text-blue-400 hover:text-blue-300 underline"
+              >
+                → Apply for WFH Request
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setLocationError('')}
+            className="text-red-400/60 hover:text-red-400 text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* GPS requesting indicator */}
+      {geo.status === 'requesting' && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+          <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin shrink-0" />
+          <p className="text-blue-400 text-sm">Getting your location…</p>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 mb-6">
         {!isCheckedIn ? (
           <button
             onClick={handleCheckIn}
-            disabled={actionLoading === 'checkin'}
+            disabled={actionLoading === 'checkin' || geo.status === 'requesting'}
             className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-emerald-500/25 transition-all duration-200"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
             </svg>
             {actionLoading === 'checkin' ? 'Checking in...' : 'Check In'}
           </button>
@@ -252,11 +356,12 @@ const handleCheckOut = async () => {
             )}
             <button
               onClick={handleCheckOut}
-              disabled={!!actionLoading}
+              disabled={!!actionLoading || geo.status === 'requesting'}
               className="flex items-center gap-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-semibold px-5 py-3 rounded-xl shadow-lg shadow-red-500/20 transition-all duration-200"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               Check Out
             </button>
@@ -264,9 +369,7 @@ const handleCheckOut = async () => {
         ) : (
           <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 text-slate-400 px-5 py-3 rounded-xl text-sm">
             ✅ Day completed! Checked out at{' '}
-            {summary?.todayLog?.checkOutTime
-              ? formatISTTime(summary?.todayLog?.checkOutTime)
-              : ''}
+            {summary?.todayLog?.checkOutTime ? formatISTTime(summary?.todayLog?.checkOutTime) : ''}
           </div>
         )}
       </div>
@@ -275,9 +378,7 @@ const handleCheckOut = async () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Check In"
-          value={summary?.todayLog?.checkInTime
-            ? formatISTTime(summary?.todayLog?.checkInTime)
-            : '--:--'}
+          value={summary?.todayLog?.checkInTime ? formatISTTime(summary?.todayLog?.checkInTime) : '--:--'}
           sub={summary?.todayLog?.dayStatus}
           color="text-emerald-400"
         />
@@ -302,7 +403,11 @@ const handleCheckOut = async () => {
       </div>
 
       {/* Timeline */}
-      <TimelineBar summary={summary ?? { isCheckedIn: false, hasActiveBreak: false, tasksCompleted: 0, tasksInProgress: 0, totalSupportGiven: 0, netWorkMinutes: 0, netWorkHours: '0h 0m' }} />
+      <TimelineBar summary={summary ?? {
+        isCheckedIn: false, hasActiveBreak: false,
+        tasksCompleted: 0, tasksInProgress: 0,
+        totalSupportGiven: 0, netWorkMinutes: 0, netWorkHours: '0h 0m'
+      }} />
 
       {/* Recent Tasks */}
       {summary?.todayLog?.tasks && summary.todayLog.tasks.length > 0 && (
@@ -314,18 +419,16 @@ const handleCheckOut = async () => {
           <div className="space-y-2">
             {summary.todayLog.tasks.slice(0, 5).map(task => (
               <div key={task.id} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-xl">
-                <span className={`text-lg ${task.status === 'Completed' ? '✅' : task.status === 'Blocked' ? '🚫' : '🔄'}`}>
+                <span className="text-lg">
                   {task.status === 'Completed' ? '✅' : task.status === 'Blocked' ? '🚫' : '🔄'}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white font-medium truncate">{task.taskTitle}</p>
-                  {task.projectName && (
-                    <p className="text-xs text-slate-500">{task.projectName}</p>
-                  )}
+                  {task.projectName && <p className="text-xs text-slate-500">{task.projectName}</p>}
                 </div>
                 <span className="text-xs text-slate-500 flex-shrink-0">{task.timeSpentMinutes}m</span>
                 <span className={`text-xs px-2 py-1 rounded-lg flex-shrink-0 ${
-                  task.priority === 'High' ? 'bg-red-500/20 text-red-400' :
+                  task.priority === 'High'   ? 'bg-red-500/20 text-red-400' :
                   task.priority === 'Medium' ? 'bg-amber-500/20 text-amber-400' :
                   'bg-slate-700 text-slate-400'
                 }`}>{task.priority}</span>
@@ -348,9 +451,7 @@ const handleCheckOut = async () => {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-white font-medium">{s.supportedDeveloperName}</p>
                   <p className="text-xs text-slate-400 truncate">{s.issueDescription}</p>
-                  {s.media && s.media.length > 0 && (
-                    <SupportMediaDisplay media={s.media} />
-                  )}
+                  {s.media && s.media.length > 0 && <SupportMediaDisplay media={s.media} />}
                 </div>
                 <span className="text-xs text-slate-500">{s.timeSpentMinutes}m</span>
               </div>
@@ -367,7 +468,7 @@ const handleCheckOut = async () => {
           <p className="text-slate-500 text-sm mt-1">Click "Check In" to begin tracking your work</p>
         </div>
       )}
-      {/* Add this button somewhere visible - e.g., top of dashboard */}
+
       <div className="flex justify-between items-center mb-6 p-2">
         <button
           onClick={() => setShowEODModal(true)}
@@ -377,16 +478,11 @@ const handleCheckOut = async () => {
         </button>
       </div>
 
-      {/* Team Presence — full width section below everything */}
       <div className="mt-4">
         <TeamPresencePanel />
       </div>
 
-      {/* Modal renders here — outside all layout divs */}
-      <EODReportModal
-        open={showEODModal}
-        onClose={() => setShowEODModal(false)}
-      />
+      <EODReportModal open={showEODModal} onClose={() => setShowEODModal(false)} />
     </div>
   );
 };
