@@ -13,7 +13,9 @@ import { ChatMessage, ConversationDetail,TrainingDto,
    AppNotification} from '../types';
 import { ChatApiResponse, MessageHistory } from '../types/chat';
 
-const BASE_URL = 'https://localhost:7096/api';
+//const BASE_URL = 'https://localhost:7096/api';
+//const BASE_URL = 'http://192.168.1.244:5053/api';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://localhost:7096/api';
 
 const api = axios.create({
   baseURL: BASE_URL,

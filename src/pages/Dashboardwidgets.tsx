@@ -297,7 +297,7 @@ useEffect(() => {
       </button>
 
       {open && (
-        <div className="fixed right-4 top-4 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-[9999] overflow-hidden">
+        <div className="fixed left-10 top-4 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl z-[9999] overflow-hidden">
           <div className="border-b border-slate-800">
             <div className="flex items-center justify-between px-4 pt-4 pb-3">
               <h4 className="text-sm font-semibold text-white">Notifications</h4>
