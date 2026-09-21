@@ -7,8 +7,8 @@ import { useState, useCallback } from 'react';
 // const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.73802626253317');
 // const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.67471440434981');
 // const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '300');
-const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.603406');
-const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.7476373');
+const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.603507647809764');
+const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.74762657240488');
 const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '300');
 
 // Log at module load so you can confirm env vars in console immediately on page load

@@ -9,6 +9,7 @@ import { managerApi, downloadBlob } from '../services/api';
 // } from '../../types';
 
 import { UserAttendanceSummary,AttendanceDay,UserFullReport } from '../types';
+import { DatePicker } from '../components/DatePicker';
 
 // ─── Attendance Calendar ──────────────────────────────────────────────────────
 
@@ -202,21 +203,23 @@ export const UserDetailPage = () => {
         <span className="text-sm text-slate-400 font-medium">Report Period:</span>
         <div className="flex items-center gap-2">
           <label className="text-xs text-slate-500">From</label>
-          <input
+          {/* <input
             type="date"
             value={fromDate}
             onChange={e => setFromDate(e.target.value)}
             className="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          /> */}
+          <DatePicker value={fromDate} onChange={setFromDate} />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-xs text-slate-500">To</label>
-          <input
+          {/* <input
             type="date"
             value={toDate}
             onChange={e => setToDate(e.target.value)}
             className="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          /> */}
+          <DatePicker value={toDate} onChange={setToDate} />
         </div>
 
         <span className="text-slate-600 text-sm">|</span>

@@ -9,6 +9,7 @@ import type {
   CreateReviewCycleDto,
 } from '../types';
 import { COMPETENCIES, RATING_LABELS } from '../types';
+import { DatePicker } from '../components/DatePicker';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BACKEND_ORIGIN = 'https://localhost:7096';
@@ -528,30 +529,21 @@ const CreateCycleModal = ({
               <label className="text-xs text-slate-400 font-medium block mb-1">
                 Self-Assessment Due
               </label>
-              <input type="date" value={form.selfAssessmentDueDate ?? ''}
-                onChange={e => setForm(f => ({ ...f, selfAssessmentDueDate: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5
-                  text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <DatePicker value={form.selfAssessmentDueDate ?? ''}
+                onChange={v => setForm(f => ({ ...f, selfAssessmentDueDate: v }))} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-400 font-medium block mb-1">Start Date *</label>
-              <input type="date" value={form.startDate}
-                onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5
-                  text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <DatePicker value={form.startDate}
+                onChange={v => setForm(f => ({ ...f, startDate: v }))} />
             </div>
             <div>
               <label className="text-xs text-slate-400 font-medium block mb-1">End Date *</label>
-              <input type="date" value={form.endDate}
-                onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5
-                  text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <DatePicker value={form.endDate}
+                onChange={v => setForm(f => ({ ...f, endDate: v }))} />
             </div>
           </div>
 

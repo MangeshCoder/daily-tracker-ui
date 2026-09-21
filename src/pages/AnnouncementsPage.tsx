@@ -4,6 +4,7 @@ import { announcementsApi } from '../services/api';
 import { Announcement, AnnouncementsResponse, CreateAnnouncementDto } from '../types';
 import { useAuth } from '../context/Authcontext';
 import { useSignalR } from '../context/SignalRContext';
+import { DatePicker } from '../components/DatePicker';
 
 
 // ─── Category config ──────────────────────────────────────────────────────────
@@ -206,14 +207,16 @@ const CreateModal = ({ onClose }: CreateModalProps) => {
             </div>
             <div>
               <label className="text-slate-400 text-xs font-medium mb-1.5 block">Expires At (optional)</label>
-              <input
+              {/* <input
                 type="date"
                 value={form.expiresAt?.slice(0, 10) ?? ''}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, expiresAt: e.target.value ? e.target.value + 'T00:00:00Z' : null }))
                 }
                 className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              /> */}
+              <DatePicker value={form.expiresAt?.slice(0, 10) ?? ''}
+                  onChange={v => setForm((f) => ({ ...f, expiresAt: v ? v + 'T00:00:00Z' : null }))} />
             </div>
           </div>
 

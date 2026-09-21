@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { tasksApi } from '../services/api';
 import type { TaskLog, CreateTaskDto } from '../types';
 import { KanbanBoard } from './Kanbanboard';
+import { useConfirm } from '../hooks/useConfirm';
 
 const statusColors: Record<string, string> = {
   InProgress: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -35,6 +36,7 @@ export const TasksPage = () => {
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState('All');
   const [view, setView] = useState<'list' | 'kanban'>('list');
+  const { confirm } = useConfirm();
 
   const load = async () => {
     try {
@@ -80,7 +82,12 @@ export const TasksPage = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Delete this task?')) return;
+    const ok = await confirm('This task will be permanently deleted.', {
+      title:       'Delete Task?',
+      confirmText: 'Yes, delete',
+      danger:      true,
+    });
+    if (!ok) return;
     await tasksApi.delete(id);
     await load();
   };
