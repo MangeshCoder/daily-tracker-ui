@@ -28,8 +28,52 @@ export interface BreakLog { id: number; breakType: string; startTime: string; en
 export interface TaskLog { id: number; taskTitle: string; description?: string; projectName?: string; status: 'InProgress'|'Completed'|'Blocked'|'OnHold'; timeSpentMinutes: number; priority: 'Low'|'Medium'|'High'; tags?: string; completedAt?: string; createdAt: string; }
 export interface CreateTaskDto { taskTitle: string; description?: string; projectName?: string; status: string; timeSpentMinutes: number; priority: string; tags?: string; }
 export interface MediaEvidence { id: number; mediaType: string; fileName: string; url: string; fileSizeBytes: number; mimeType: string; }
-export interface SupportLog { id: number; supportedDeveloperName: string; issueDescription: string; resolution?: string; timeSpentMinutes: number; supportType: string; supportedAt: string; media?: MediaEvidence[]; }
-export interface CreateSupportDto { supportedDeveloperId: number; issueDescription: string; resolution?: string; timeSpentMinutes: number; supportType: string; }
+export interface SupportLog {
+  id: number;
+  supportEngineerName: string;       // ← NEW (Feature 2)
+  supportedDeveloperName: string;
+  issueDescription: string;
+  resolution?: string;
+  timeSpentMinutes: number;
+  supportType: string;
+  supportedAt: string;
+  media?: MediaEvidence[];
+  distanceFromOfficeMetres?: number;
+  wasAssigned?: boolean;             // ← NEW (Feature 3)
+}
+export interface CreateSupportDto {
+  supportEngineerId: number;         // ← NEW (Feature 2)
+  supportedDeveloperId: number;
+  issueDescription: string;
+  resolution?: string;
+  timeSpentMinutes: number;
+  supportType: string;
+  supportAssignmentId?: number;      // ← NEW (Feature 3)
+}
+
+export interface SupportAssignment {
+  id: number;
+  supportEngineerId: number;
+  supportEngineerName: string;
+  developerId: number;
+  developerName: string;
+  assignedByManager: string;
+  isActive: boolean;
+  notes?: string;
+  assignedAt: string;
+}
+ 
+// ── 4. ADD MyAssignment interface ─────────────────────────────────────────────
+ 
+export interface MyAssignment {
+  hasAssignment: boolean;
+  assignmentId?: number;
+  supportEngineerId?: number;
+  supportEngineerName?: string;
+  notes?: string;
+  assignedAt?: string;
+}
+
 export interface DailyLog { id: number; logDate: string; checkInTime?: string; checkOutTime?: string; totalWorkMinutes: number; totalBreakMinutes: number; dayStatus: string; notes?: string; workHours: string; breaks: BreakLog[]; tasks: TaskLog[]; supportLogs: SupportLog[]; }
 export interface DashboardSummary { todayLog?: DailyLog; tasksCompleted: number; tasksInProgress: number; totalSupportGiven: number; netWorkMinutes: number; netWorkHours: string; isCheckedIn: boolean; hasActiveBreak: boolean; activeBreak?: BreakLog; }
 
@@ -136,7 +180,7 @@ export interface AuditLog { id: number; userName: string; action: string; entity
 // ─── Manager types (from previous version) ────────────────────────────────────
 export interface UserDailyActivity { user: User; dayStatus: string; checkInTime?: string; checkOutTime?: string; workHours: string; totalBreakMinutes: number; tasksTotal: number; tasksCompleted: number; tasksInProgress: number; supportGiven: number; isOnBreak: boolean; activeBreakType?: string; tasks: TaskLog[]; supportLogs: SupportLog[]; }
 export interface ManagerTeamDaily { date: string; totalMembers: number; checkedIn: number; notCheckedIn: number; members: UserDailyActivity[]; }
-export interface UserAttendanceSummary { user: User; month: number; year: number; workingDaysInMonth: number; daysPresent: number; daysWFH: number; daysHalfDay: number; daysAbsent: number; attendancePercentage: number; totalWorkMinutes: number; totalWorkHours: string; averageDailyHours: number; totalTasksCompleted: number; totalSupportGiven: number; }
+export interface UserAttendanceSummary { user: User; month: number; year: number; workingDaysInMonth: number; daysPresent: number; daysWFH: number; daysHalfDay: number; daysAbsent: number; attendancePercentage: number; totalWorkMinutes: number; totalWorkHours: string; averageDailyHours: number; totalTasksCompleted: number; totalSupportGiven: number;daysWeekend: number; daysHoliday: number;  }
 export interface AttendanceDay { date: string; status: string; checkIn?: string; checkOut?: string; workHours: string; tasksCompleted: number; }
 export interface TeamMonthlyStats { month: number; year: number; members: UserAttendanceSummary[]; teamAverageAttendance: number; teamTotalTasksCompleted: number; teamTotalSupportLogs: number; }
 export interface UserFullReport { user: User; fromDate: string; toDate: string; totalWorkingDays: number; daysPresent: number; attendancePercentage: number; totalWorkMinutes: number; totalWorkHours: string; averageDailyHours: number; totalTasksCompleted: number; totalTasksLogged: number; totalSupportGiven: number; dailyEntries: DailyReportEntry[]; }
@@ -203,20 +247,24 @@ export interface TeamDailyStatus {
 }
 
 export interface TeamMonthlyAttendance {
-  userId: number;
-  fullName: string;
-  role: string;
-  workingDaysInMonth: number;
-  daysPresent: number;
-  daysWFH: number;
-  daysHalfDay: number;
-  daysAbsent: number;
+  userId:              number;
+  fullName:            string;
+  role:                string;
+  workingDaysInMonth:  number;
+  daysPresent:         number;
+  daysWFH:             number;
+  daysHalfDay:         number;
+  daysAbsent:          number;
+  daysWeekend:         number;   // ← NEW
+  daysHoliday:         number;   // ← NEW
   attendancePercentage: number;
-  totalWorkHours: string;
-  averageDailyHours: number;
+  totalWorkHours:      string;
+  averageDailyHours:   number;
   totalTasksCompleted: number;
-  wfhDates: string[];
-  halfDayDates: string[];
+  wfhDates:            string[];
+  halfDayDates:        string[];
+  weekendDates:        string[];  // ← NEW
+  holidayDates:        string[];  // ← NEW
 }
 
 export interface EmailOtpRequest {
@@ -384,14 +432,14 @@ export type DirectoryUser = UserProfile;
 
 export type MemberDayStatus =
   | 'Present' | 'WFH' | 'HalfDay' | 'Leave'
-  | 'Absent'  | 'Weekend' | 'Unknown';
+  | 'Absent'  | 'Weekend' | 'Holiday' | 'Unknown';
 
 export interface CalendarMemberDay {
   userId:          number;
   fullName:        string;
   profilePhotoUrl: string | null;
   role:            string;
-  status:          MemberDayStatus;
+  status: string; 
   leaveType:       string | null;
 }
 
@@ -977,4 +1025,21 @@ export interface ReviewResignationDto {
 export interface CompleteExitDto {
   exitDate:   string;
   finalNote?: string;
+}
+export interface FaceDescriptorResponse {
+  userId:         number;
+  fullName:       string;
+  faceRegistered: boolean;
+  descriptor?:    string; // JSON array of 128 floats, null if not registered
+}
+ 
+export interface FaceAttemptLog {
+  id:          number;
+  userId:      number;
+  fullName:    string;
+  action:      'CheckIn' | 'CheckOut';
+  success:     boolean;
+  distance:    number;
+  result:      'Matched' | 'Mismatch' | 'NoFaceDetected' | 'NotRegistered';
+  attemptedAt: string;
 }

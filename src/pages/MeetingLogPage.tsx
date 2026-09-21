@@ -7,6 +7,8 @@ import type {
   MeetingDto, MeetingAttendeeDto, MeetingActionItemDto,
   CreateMeetingDto, MeetingType, MeetingStatus, RsvpResponse,
 } from '../types';
+import { DatePicker } from '../components/DatePicker';
+import { DateTimePicker } from '../components/DateTimePicker';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BACKEND_ORIGIN = 'https://localhost:7096';
@@ -399,13 +401,14 @@ const MeetingModal = ({
                       <option key={a.userId} value={a.userId}>{a.fullName}</option>
                     ))}
                   </select>
-                  <input
+                  {/* <input
                     type="date"
                     value={newActionDue}
                     onChange={e => setNewActionDue(e.target.value)}
                     className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm
                       text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  /> */}
+                  <DatePicker value={newActionDue} onChange={setNewActionDue} />
                 </div>
                 <button
                   onClick={() => {
@@ -528,13 +531,16 @@ const CreateMeetingModal = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-400 font-medium mb-1 block">Date & Time *</label>
-              <input
+              {/* <input
                 type="datetime-local"
                 value={form.scheduledAt}
                 onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm
                   text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              /> */}
+              <DateTimePicker value={form.scheduledAt}
+                onChange={v => setForm(f => ({ ...f, scheduledAt: v }))}
+                placeholder="Select date & time" />
             </div>
             <div>
               <label className="text-xs text-slate-400 font-medium mb-1 block">Location / Link</label>

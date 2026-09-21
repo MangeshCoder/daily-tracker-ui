@@ -1,18 +1,28 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  FILE 5: frontend/src/pages/Dashboardpage.tsx
+//  FILE: daily-tracker-ui/src/pages/Dashboardpage.tsx
 //  ACTION: REPLACE entire file
 //
-//  Changes from original:
-//  1. useGeolocation hook imported
-//  2. locationError state added — shows error banner below buttons
-//  3. handleCheckIn:
-//     - calls geo.requestLocation() first
-//     - if withinOffice → proceed, send lat/lng with request
-//     - if outside/denied/WFH check → shows locationError banner
-//       with "Apply WFH" link if blocked due to location
-//     - catches 403 from backend → shows the exact server message
-//  4. handleCheckOut: same location logic
-//  5. All original UI (Swal confirm on checkout, breaks, stats, timeline) unchanged
+//  Merges:
+//  ✅ Location validation (useGeolocation) — unchanged from your current file
+//  ✅ locationError banner + WFH link — unchanged
+//  ✅ GPS requesting indicator — unchanged
+//  ✅ EOD Report modal — unchanged
+//  ✅ TeamPresencePanel — unchanged
+//  ✅ Face recognition — properly wired in
+//
+//  New check-in flow:
+//    Click Check In
+//      → FaceVerifyModal opens (optional, can skip)
+//      → After verify/skip → GPS location check runs
+//      → If location OK → checkIn(lat, lng)
+//      → If location fails → show locationError banner
+//
+//  New check-out flow:
+//    Click Check Out
+//      → FaceVerifyModal opens (optional, can skip)
+//      → After verify/skip → Swal confirm dialog
+//      → After confirm → GPS location check runs
+//      → If location OK → checkOut(lat, lng)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,6 +34,8 @@ import Swal from 'sweetalert2';
 import { EODReportModal, TeamPresencePanel } from './Teamcomponents';
 import { useGeolocation } from '../context/useGeolocation';
 import { useNavigate } from 'react-router-dom';
+import { FaceVerifyModal } from '../components/FaceVerifyModal';
+import type { FaceVerifyResult } from '../hooks/useFaceRecognition';
 
 const formatISTTime = (dateString?: string) => {
   if (!dateString) return '--:--';
@@ -77,16 +89,23 @@ const TimelineBar = ({ summary }: { summary: DashboardSummary }) => {
   );
 };
 
-export const DashboardPage = () => {
-  const { user }    = useAuth();
-  const navigate    = useNavigate();
-  const [summary, setSummary]         = useState<DashboardSummary | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [actionLoading, setActionLoading] = useState('');
-  const [showEODModal, setShowEODModal]   = useState(false);
-  const [locationError, setLocationError] = useState('');  // ← NEW
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 
-  const geo = useGeolocation();  // ← NEW
+export const DashboardPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [summary, setSummary]             = useState<DashboardSummary | null>(null);
+  const [loading, setLoading]             = useState(true);
+  const [actionLoading, setActionLoading] = useState('');
+  const [locationError, setLocationError] = useState('');
+  const [showEODModal, setShowEODModal]   = useState(false);
+
+  // ── Face verification state ──────────────────────────────────────────────
+  const [showFaceVerify, setShowFaceVerify] = useState(false);
+  const [pendingAction, setPendingAction]   = useState<'checkin' | 'checkout' | null>(null);
+
+  const geo = useGeolocation();
 
   const load = useCallback(async () => {
     try {
@@ -105,123 +124,148 @@ export const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [load]);
 
-  // ── Check In ──────────────────────────────────────────────────────────────
-  const handleCheckIn = async () => {
+  // ── Step 1: Click Check In → open face modal ─────────────────────────────
+  const handleCheckIn = () => {
     setLocationError('');
-    setActionLoading('checkin');
-
-    try {
-      // Step 1: Get GPS coordinates
-      const coords = await geo.requestLocation();
-
-      if (!coords) {
-        // GPS failed or outside office
-        if (geo.status === 'denied') {
-          setLocationError(
-            '📍 Location permission denied. Please allow location in browser settings. ' +
-            'If you are working from home, apply for a WFH request first.'
-          );
-        } else if (geo.status === 'outside') {
-          setLocationError(
-            `📍 ${geo.errorMessage} If you are working from home, apply for a WFH request first.`
-          );
-        } else {
-          setLocationError('📍 Could not get your location. Please try again.');
-        }
-        setActionLoading('');
-        return;
-      }
-
-      // Step 2: Check in with coordinates
-      await dailyLogApi.checkIn({
-        dayStatus: 'Present',
-        latitude:  coords.latitude,
-        longitude: coords.longitude,
-      });
-
-      await load();
-    } catch (err: any) {
-      // Backend 403 — location rejected server-side
-      if (err?.response?.status === 403) {
-        setLocationError(`📍 ${err.response.data?.message}`);
-      } else {
-        setLocationError('Check-in failed. Please try again.');
-      }
-    } finally {
-      setActionLoading('');
-    }
+    setPendingAction('checkin');
+    setShowFaceVerify(true);
   };
 
-  // ── Check Out ─────────────────────────────────────────────────────────────
-  const handleCheckOut = async () => {
+  // ── Step 1: Click Check Out → open face modal ────────────────────────────
+  const handleCheckOut = () => {
     setLocationError('');
+    setPendingAction('checkout');
+    setShowFaceVerify(true);
+  };
 
-    // Confirm dialog first (same as original)
-    const result = await Swal.fire({
-      title: 'Ready to check out?',
-      text:  'Are you sure you want to check out for today?',
-      icon:  'question',
-      background: 'rgb(15, 23, 42)',
-      color: '#ffffff',
-      iconColor: '#3b82f6',
-      showCancelButton:    true,
-      confirmButtonColor:  '#3b82f6',
-      cancelButtonColor:   '#94a3b8',
-      confirmButtonText:   'Yes, check out',
-      cancelButtonText:    'Cancel',
-      customClass: { popup: 'font-sans rounded-lg' }
-    });
+  // ── Step 2: Face modal done → run location + API ─────────────────────────
+  // faceResult = FaceVerifyResult (matched/mismatch/skipped) or null (WFH / skipped)
+  // In all cases we proceed — face is optional, location is required.
+  const handleFaceVerifyComplete = async (faceResult: FaceVerifyResult | null) => {
+    setShowFaceVerify(false);
 
-    if (!result.isConfirmed) return;
+    // ── CHECK IN FLOW ──────────────────────────────────────────────────────
+    if (pendingAction === 'checkin') {
+      setPendingAction(null);
+      setActionLoading('checkin');
 
-    setActionLoading('checkout');
+      try {
+        // Get GPS location
+        const coords = await geo.requestLocation();
 
-    try {
-      // Step 1: Get GPS coordinates
-      const coords = await geo.requestLocation();
-
-      if (!coords) {
-        if (geo.status === 'denied') {
-          setLocationError('📍 Location permission denied. Cannot check out without location verification.');
-        } else if (geo.status === 'outside') {
-          setLocationError(`📍 ${geo.errorMessage}`);
-        } else {
-          setLocationError('📍 Could not get your location. Please try again.');
+        if (!coords) {
+          if (geo.status === 'denied') {
+            setLocationError(
+              '📍 Location permission denied. Please allow location in browser settings. ' +
+              'If you are working from home, apply for a WFH request first.'
+            );
+          } else if (geo.status === 'outside') {
+            setLocationError(
+              `📍 ${geo.errorMessage} If you are working from home, apply for a WFH request first.`
+            );
+          } else {
+            setLocationError('📍 Could not get your location. Please try again.');
+          }
+          return;
         }
+
+        // Check in with coordinates
+        await dailyLogApi.checkIn({
+          dayStatus: 'Present',
+          latitude:  coords.latitude,
+          longitude: coords.longitude,
+        });
+
+        await load();
+
+      } catch (err: any) {
+        if (err?.response?.status === 403) {
+          setLocationError(`📍 ${err.response.data?.message}`);
+        } else {
+          setLocationError('Check-in failed. Please try again.');
+        }
+      } finally {
         setActionLoading('');
-        return;
       }
+    }
 
-      // Step 2: Check out with coordinates
-      await dailyLogApi.checkOut({
-        latitude:  coords.latitude,
-        longitude: coords.longitude,
-      });
+    // ── CHECK OUT FLOW ─────────────────────────────────────────────────────
+    if (pendingAction === 'checkout') {
+      setPendingAction(null);
 
-      await load();
-
-      Swal.fire({
-        title: 'Checked Out!',
-        text:  'Have a great rest of your day.',
-        icon:  'success',
+      // Swal confirm comes AFTER face verify, before location check
+      const confirmed = await Swal.fire({
+        title: 'Ready to check out?',
+        text:  'Are you sure you want to check out for today?',
+        icon:  'question',
         background: 'rgb(15, 23, 42)',
         color: '#ffffff',
         iconColor: '#3b82f6',
-        timer: 2000,
-        showConfirmButton: false,
+        showCancelButton:   true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor:  '#94a3b8',
+        confirmButtonText:  'Yes, check out',
+        cancelButtonText:   'Cancel',
+        customClass: { popup: 'font-sans rounded-lg' },
       });
 
-    } catch (err: any) {
-      if (err?.response?.status === 403) {
-        setLocationError(`📍 ${err.response.data?.message}`);
-      } else {
-        setLocationError('Check-out failed. Please try again.');
+      if (!confirmed.isConfirmed) return;
+
+      setActionLoading('checkout');
+
+      try {
+        // Get GPS location
+        const coords = await geo.requestLocation();
+
+        if (!coords) {
+          if (geo.status === 'denied') {
+            setLocationError('📍 Location permission denied. Cannot check out without location verification.');
+          } else if (geo.status === 'outside') {
+            setLocationError(`📍 ${geo.errorMessage}`);
+          } else {
+            setLocationError('📍 Could not get your location. Please try again.');
+          }
+          return;
+        }
+
+        // Check out with coordinates
+        await dailyLogApi.checkOut({
+          latitude:  coords.latitude,
+          longitude: coords.longitude,
+        });
+
+        await load();
+
+        Swal.fire({
+          title: 'Checked Out!',
+          text:  'Have a great rest of your day.',
+          icon:  'success',
+          background: 'rgb(15, 23, 42)',
+          color: '#ffffff',
+          iconColor: '#3b82f6',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+      } catch (err: any) {
+        if (err?.response?.status === 403) {
+          setLocationError(`📍 ${err.response.data?.message}`);
+        } else {
+          setLocationError('Check-out failed. Please try again.');
+        }
+      } finally {
+        setActionLoading('');
       }
-    } finally {
-      setActionLoading('');
     }
   };
 
+  // ── Face modal cancelled → reset state ──────────────────────────────────
+  const handleFaceCancel = () => {
+    setShowFaceVerify(false);
+    setPendingAction(null);
+  };
+
+  // ── Break handler (unchanged) ────────────────────────────────────────────
   const handleBreak = async (type: string) => {
     setActionLoading(`break-${type}`);
     try {
@@ -251,12 +295,23 @@ export const DashboardPage = () => {
     );
   }
 
-  const isCheckedIn  = summary?.isCheckedIn ?? false;
-  const isCheckedOut = !!summary?.todayLog?.checkOutTime;
+  const isCheckedIn    = summary?.isCheckedIn ?? false;
+  const isCheckedOut   = !!summary?.todayLog?.checkOutTime;
   const hasActiveBreak = summary?.hasActiveBreak ?? false;
+  const isWFH          = summary?.todayLog?.dayStatus === 'WFH';
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+
+      {/* ── Face Verify Modal ────────────────────────────────────────────── */}
+      {showFaceVerify && pendingAction && (
+        <FaceVerifyModal
+          action={pendingAction === 'checkin' ? 'CheckIn' : 'CheckOut'}
+          isWFH={isWFH}
+          onSuccess={handleFaceVerifyComplete}
+          onCancel={handleFaceCancel}
+        />
+      )}
 
       {/* Header */}
       <div className="mb-8">
@@ -267,7 +322,7 @@ export const DashboardPage = () => {
             </h1>
             <p className="text-slate-400 text-sm mt-1">
               {new Date().toLocaleDateString('en-IN', {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
               })}
             </p>
           </div>
@@ -280,12 +335,11 @@ export const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── Location Error Banner ──────────────────────────────────────────── */}
+      {/* ── Location Error Banner ────────────────────────────────────────── */}
       {locationError && (
         <div className="mb-4 flex items-start gap-3 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-xl">
           <div className="flex-1">
             <p className="text-red-400 text-sm">{locationError}</p>
-            {/* Show WFH link when blocked due to location */}
             {locationError.includes('working from home') && (
               <button
                 onClick={() => navigate('/request')}
@@ -363,13 +417,13 @@ export const DashboardPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Check Out
+              {actionLoading === 'checkout' ? 'Checking out...' : 'Check Out'}
             </button>
           </>
         ) : (
           <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 text-slate-400 px-5 py-3 rounded-xl text-sm">
             ✅ Day completed! Checked out at{' '}
-            {summary?.todayLog?.checkOutTime ? formatISTTime(summary?.todayLog?.checkOutTime) : ''}
+            {summary?.todayLog?.checkOutTime ? formatISTTime(summary.todayLog.checkOutTime) : ''}
           </div>
         )}
       </div>
@@ -378,7 +432,7 @@ export const DashboardPage = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Check In"
-          value={summary?.todayLog?.checkInTime ? formatISTTime(summary?.todayLog?.checkInTime) : '--:--'}
+          value={summary?.todayLog?.checkInTime ? formatISTTime(summary.todayLog.checkInTime) : '--:--'}
           sub={summary?.todayLog?.dayStatus}
           color="text-emerald-400"
         />
@@ -406,7 +460,7 @@ export const DashboardPage = () => {
       <TimelineBar summary={summary ?? {
         isCheckedIn: false, hasActiveBreak: false,
         tasksCompleted: 0, tasksInProgress: 0,
-        totalSupportGiven: 0, netWorkMinutes: 0, netWorkHours: '0h 0m'
+        totalSupportGiven: 0, netWorkMinutes: 0, netWorkHours: '0h 0m',
       }} />
 
       {/* Recent Tasks */}
@@ -428,7 +482,7 @@ export const DashboardPage = () => {
                 </div>
                 <span className="text-xs text-slate-500 flex-shrink-0">{task.timeSpentMinutes}m</span>
                 <span className={`text-xs px-2 py-1 rounded-lg flex-shrink-0 ${
-                  task.priority === 'High'   ? 'bg-red-500/20 text-red-400' :
+                  task.priority === 'High'   ? 'bg-red-500/20 text-red-400'     :
                   task.priority === 'Medium' ? 'bg-amber-500/20 text-amber-400' :
                   'bg-slate-700 text-slate-400'
                 }`}>{task.priority}</span>
@@ -469,6 +523,7 @@ export const DashboardPage = () => {
         </div>
       )}
 
+      {/* EOD Report */}
       <div className="flex justify-between items-center mb-6 p-2">
         <button
           onClick={() => setShowEODModal(true)}
@@ -478,6 +533,7 @@ export const DashboardPage = () => {
         </button>
       </div>
 
+      {/* Team Presence */}
       <div className="mt-4">
         <TeamPresencePanel />
       </div>

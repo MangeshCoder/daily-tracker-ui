@@ -162,19 +162,26 @@ export const tasksApi = {
 // ─── Support ──────────────────────────────────────────────────────────────────
 export const supportApi = {
   create: (d: object) => api.post('/support', d),
+ 
   createWithMedia: (formData: FormData, onUploadProgress?: (percent: number) => void) =>
-    api.post("/support/with-media", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    api.post('/support/with-media', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (progressEvent) => {
         if (!progressEvent.total) return;
-        const percent = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         onUploadProgress?.(percent);
       },
     }),
-  delete: (id: number) => api.delete(`/support/${id}`),
-  getToday: () => api.get('/support/today'),
+ 
+  delete:        (id: number) => api.delete(`/support/${id}`),
+  getToday:      ()           => api.get('/support/today'),
+  getMyAssignment: ()         => api.get('/support/my-assignment'),  // ← NEW Feature 3
+};
+
+export const supportAssignmentApi = {
+  getAll:     ()                         => api.get('/support/assignments'),
+  create:     (d: object)                => api.post('/support/assignments', d),
+  deactivate: (id: number)               => api.delete(`/support/assignments/${id}`),
 };
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -700,6 +707,44 @@ export const resignationApi = {
 
   deleteChecklistItem: (itemId: number) =>
     api.delete(`/resignation/checklist/${itemId}`),
+  
+};
+export const faceApi = {
+  // Register own face (employee)
+  registerFace: (descriptor: string) =>
+    api.post('/face/register', { descriptor }),
+ 
+  // Manager registers on behalf of employee
+  registerFaceForUser: (userId: number, descriptor: string) =>
+    api.post('/face/register', { descriptor, targetUserId: userId }),
+ 
+  // Get own descriptor
+  getMyDescriptor: () =>
+    api.get('/face/descriptor'),
+ 
+  // Get any user's descriptor (manager)
+  getDescriptor: (userId: number) =>
+    api.get(`/face/descriptor/${userId}`),
+ 
+  // Log an attempt result
+  logAttempt: (data: {
+    action: 'CheckIn' | 'CheckOut';
+    success: boolean;
+    distance: number;
+    result: string;
+  }) => api.post('/face/log-attempt', data),
+ 
+  // Get own attempt history
+  getMyAttempts: (days = 7) =>
+    api.get(`/face/attempts?days=${days}`),
+ 
+  // Manager: get one employee's attempts
+  getUserAttempts: (userId: number, days = 30) =>
+    api.get(`/face/attempts/${userId}?days=${days}`),
+ 
+  // Manager: all team failed attempts today
+  getTeamFailedToday: () =>
+    api.get('/face/attempts/team/failed-today'),
 };
 
 export default api;

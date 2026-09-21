@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/Authcontext';
 import { Trash2 } from 'lucide-react';
 import { LeaveBalanceDto, LeaveTypeBalanceItem } from '../types';
+import { DatePicker } from '../components/DatePicker';
 
 // ─── Leave type visual config ─────────────────────────────────────────────────
 const LEAVE_CONFIG: Record<string, { icon: string; color: string; bar: string }> = {
@@ -330,19 +331,13 @@ export const LeaveManagementPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <div>
               <label className="block text-xs text-slate-400 mb-1">From Date</label>
-              <input
-                type="date" value={form.fromDate}
-                onChange={e => setForm(p => ({ ...p, fromDate: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+             <DatePicker value={form.fromDate}
+              onChange={v => setForm(p => ({ ...p, fromDate: v }))} />
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">To Date</label>
-              <input
-                type="date" value={form.toDate}
-                onChange={e => setForm(p => ({ ...p, toDate: e.target.value }))}
-                className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <DatePicker value={form.toDate}
+                onChange={v => setForm(p => ({ ...p, toDate: v }))} />
             </div>
             <div>
               <label className="block text-xs text-slate-400 mb-1">Leave Type</label>
@@ -401,11 +396,8 @@ export const LeaveManagementPage = () => {
                   onChange={e => setHolidayForm(p => ({ ...p, name: e.target.value }))}
                   className="bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2"
                 />
-                <input
-                  type="date" value={holidayForm.date}
-                  onChange={e => setHolidayForm(p => ({ ...p, date: e.target.value }))}
-                  className="bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2"
-                />
+                <DatePicker value={holidayForm.date}
+                  onChange={v => setHolidayForm(p => ({ ...p, date: v }))} />
                 <select
                   value={holidayForm.type}
                   onChange={e => setHolidayForm(p => ({ ...p, type: e.target.value }))}

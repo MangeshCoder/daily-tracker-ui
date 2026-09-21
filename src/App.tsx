@@ -58,6 +58,9 @@ const ChatPage = lazy(() => import('./pages/Chatpage').then(m => ({ default: m.C
 const TwoFactorSettingsPage = lazy(() =>
   import('./pages/TwoFactorSettingsPage').then(m => ({ default: m.TwoFactorSettingsPage }))
 );
+const FaceSetupPage = lazy(() =>
+  import('./pages/FaceSetupPage').then(m => ({ default: m.FaceSetupPage }))
+);
 
 // ✅ EOD Report Pages - NEW
 const EODReportPage = lazy(() =>
@@ -131,6 +134,14 @@ const ResignationPage = lazy(() =>
 
 const NotificationsPage = lazy(() =>
   import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage }))
+);
+
+const SupportAssignmentPage = lazy(() =>
+  import('./pages/SupportAssignmentPage').then(m => ({ default: m.SupportAssignmentPage }))
+);
+
+const UserDetailPage = lazy(() =>
+  import('./pages/Userdetailpage').then(m => ({ default: m.UserDetailPage }))
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -320,7 +331,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="goal-history"
+          path="Goal history"
           element={
             <Suspense fallback={<SkeletonDashboard />}>
               <GoalHistoryPage />
@@ -357,6 +368,16 @@ const AppRoutes = () => {
             <Suspense fallback={<SkeletonDashboard />}>
               <KudosPage />
             </Suspense>
+          }
+        />
+        <Route
+          path="face-setup"
+          element={
+            <ProtectedRoute>
+              <Suspense fallback={<SkeletonDashboard />}>
+                <FaceSetupPage />
+              </Suspense>
+            </ProtectedRoute>
           }
         />
         <Route
@@ -444,6 +465,36 @@ const AppRoutes = () => {
             element={
               <ManagerRoute>
                 <AssignRole />
+              </ManagerRoute>
+            }
+          />
+          <Route
+          path="/manager/face-setup/:userId"
+          element={
+            <ManagerRoute>
+              <Suspense fallback={<SkeletonDashboard />}>
+                <FaceSetupPage />
+              </Suspense>
+            </ManagerRoute>
+          }
+        />
+          <Route
+          path="manager/user/:userId"
+          element={
+            <ManagerRoute>
+              <Suspense fallback={<SkeletonDashboard />}>
+                <UserDetailPage />
+              </Suspense>
+            </ManagerRoute>
+          }
+        />
+          <Route
+            path="manager/support-assignments"
+            element={
+              <ManagerRoute>
+                <Suspense fallback={<div className="p-8 text-slate-400">Loading…</div>}>
+                  <SupportAssignmentPage />
+                </Suspense>
               </ManagerRoute>
             }
           />

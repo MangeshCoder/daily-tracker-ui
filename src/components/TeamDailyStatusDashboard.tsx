@@ -3,6 +3,7 @@ import { wfhApi } from '../services/api';
 import { WFHRequest,TeamDailyStatus } from '../types'; 
 import { StatusPill } from './StatusPill';
 import { useState } from 'react';
+import { DatePicker } from './DatePicker';
 
 const formatISTTime = (dateString?: string) => {
   if (!dateString) return "--:--";
@@ -56,12 +57,13 @@ export const TeamDailyStatusDashboard = () => {
             </p>
           )}
         </div> 
-        <input
+        {/* <input
           type="date"
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
           className="bg-slate-800 border border-slate-700 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        /> */}
+        <DatePicker value={selectedDate} onChange={setSelectedDate} />
       </div>
 
       {isLoading ? (

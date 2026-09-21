@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileApi } from '../services/api';
 import { UserProfile, UpdateProfileDto } from '../types';
+import { DatePicker } from '../components/DatePicker';
 
 const BACKEND_ORIGIN = 'https://localhost:7096';
 
@@ -326,13 +327,15 @@ export const ProfilePage = () => {
                 {/* Join Date */}
                 <div>
                   <label className="text-xs text-slate-400 font-medium mb-1.5 block">Join Date</label>
-                  <input
+                  {/* <input
                     type="date"
                     value={form.joinDate ?? ''}
                     onChange={(e) => setForm((f) => ({ ...f, joinDate: e.target.value || undefined }))}
                     className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl
                       px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  /> */}
+                  <DatePicker value={form.joinDate ?? ''}
+                    onChange={v => setForm(f => ({ ...f, joinDate: v || undefined }))} />
                 </div>
               </div>
 
