@@ -133,6 +133,11 @@ export const authApi = {
 export const aiChatApi = {
   sendMessage: (message: string, history: MessageHistory[]) =>
     api.post<ChatApiResponse>('/aichat/send', { message, history }),
+  executeAction: (type: string, payload: Record<string, any>) =>
+    api.post<{ success: boolean; message: string; item?: any }>('/aichat/execute-action', {
+      type,
+      payload,
+    }),
 };
 
 // ─── Daily Log ────────────────────────────────────────────────────────────────

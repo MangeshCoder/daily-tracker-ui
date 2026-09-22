@@ -4,12 +4,12 @@
 import { useState, useCallback } from 'react';
 
 // ── Office config from .env ───────────────────────────────────────────────────
-// const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.73802626253317');
-// const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.67471440434981');
-// const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '300');
-const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.603507647809764');
-const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.74762657240488');
-const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '300');
+ const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.73802626253317');
+ const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.67471440434981');
+ const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '5000');
+//const OFFICE_LAT    = parseFloat(import.meta.env.VITE_OFFICE_LAT    ?? '18.7381098, ');
+//const OFFICE_LNG    = parseFloat(import.meta.env.VITE_OFFICE_LNG    ?? '73.6716409');
+//const OFFICE_RADIUS = parseFloat(import.meta.env.VITE_OFFICE_RADIUS ?? '300');
 
 // Log at module load so you can confirm env vars in console immediately on page load
 console.log('[useGeolocation] Office config:', { OFFICE_LAT, OFFICE_LNG, OFFICE_RADIUS });
