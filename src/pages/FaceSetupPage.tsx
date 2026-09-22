@@ -43,15 +43,38 @@ export function FaceSetupPage() {
     }
   }, [userId, user, isSelf]);
 
-  const handleStartCamera = async () => {
+  const handleStartCamera = () => {
     setStep('camera');
-    try {
-      if (videoRef.current) await startCamera(videoRef.current);
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setStep('error');
-    }
   };
+
+  // Start the camera only after the video element has actually mounted
+  // (i.e. after `step` flips to 'camera' and React commits the DOM).
+  useEffect(() => {
+    if (step !== 'camera') return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (videoRef.current) {
+          await startCamera(videoRef.current);
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setErrorMsg(err.message);
+          setStep('error');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [step, startCamera]);
+
+  // Always release the camera if the user navigates away mid-flow
+  useEffect(() => {
+    return () => stopCamera();
+  }, [stopCamera]);
 
   const handleCapture = async () => {
     if (!videoRef.current) return;
