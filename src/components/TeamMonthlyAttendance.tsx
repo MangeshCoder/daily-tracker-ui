@@ -47,6 +47,8 @@ export const TeamMonthlyAttendances = () => {
                   <th className="text-center px-3 py-3 text-xs font-semibold text-amber-400 uppercase tracking-wider">Half Day</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-red-400 uppercase tracking-wider">Absent</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Attendance %</th>
+                  <th className="text-center px-3 py-3 text-xs font-semibold text-orange-400 uppercase tracking-wider">Weekend</th>
+                  <th className="text-center px-3 py-3 text-xs font-semibold text-violet-400 uppercase tracking-wider">Holiday</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Hours/Day</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Tasks Done</th>
                 </tr>
@@ -81,6 +83,12 @@ export const TeamMonthlyAttendances = () => {
                               style={{ width: `${Math.min(100, pct)}%` }} />
                           </div>
                         </div>
+                      </td>
+                      <td className="text-center px-3 py-3 text-orange-400 font-semibold">
+                        {m.daysWeekend > 0 ? m.daysWeekend : '—'}
+                      </td>
+                      <td className="text-center px-3 py-3 text-violet-400 font-semibold">
+                        {m.daysHoliday > 0 ? m.daysHoliday : '—'}
                       </td>
                       <td className="text-center px-3 py-3 text-slate-300">{m.averageDailyHours}h</td>
                       <td className="text-center px-3 py-3 text-slate-300">{m.totalTasksCompleted}</td>

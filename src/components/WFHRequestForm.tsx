@@ -4,6 +4,7 @@ import { WFHRequest } from '../types';
 import { StatusPill } from './StatusPill';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { DatePicker } from './DatePicker';
 
 export const WFHRequestForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [type, setType] = useState<'WFH' | 'HalfDay'>('WFH');
@@ -94,12 +95,11 @@ export const WFHRequestForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
           Date
         </label>
-        <input
-          type="date"
+        <DatePicker
           value={date}
           min={minDate}
-          onChange={e => setDate(e.target.value)}
-          className="w-full bg-slate-800 border border-slate-700 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          onChange={setDate}
+          placeholder="Select date"
         />
       </div>
 

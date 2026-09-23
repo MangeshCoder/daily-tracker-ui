@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChatMessage, ConversationSummary, UserChatProfile, ConversationDetail } from '../types/index';
 import { authApi, chatApi } from '../services/api';
 import { useChatHub } from './useChatHub';
+import { useConfirm } from '../hooks/useConfirm';
 
 // ─────────────────────────────────────────────────────────────────────────────
 const parseUtcDate = (iso: string): Date => {
@@ -842,6 +843,7 @@ export const ChatPage = () => {
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
+  const { confirm } = useConfirm();
 
   // ── Shared state owned by ChatPage ──────────────────────────────────────
   // messages is keyed by conversationId so switching convs is instant
